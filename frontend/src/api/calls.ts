@@ -55,4 +55,36 @@ export const calls = {
 
   demoReset: async () =>
     unwrap(await api.POST('/api/demo/reset', { body: { scenario_set: 'default' } })),
+
+  analystQueue: async (query: { route?: string; min_amount_bdt?: number } = {}) =>
+    unwrap(await api.GET('/api/analyst/queue', { params: { query } })),
+
+  analystCase: async (disputeId: string) =>
+    unwrap(
+      await api.GET('/api/analyst/disputes/{dispute_id}', {
+        params: { path: { dispute_id: disputeId } },
+      }),
+    ),
+
+  analyze: async (disputeId: string) =>
+    unwrap(
+      await api.POST('/api/disputes/{dispute_id}/analyze', {
+        params: { path: { dispute_id: disputeId } },
+      }),
+    ),
+
+  decide: async (disputeId: string, body: Schemas['DecisionRequest']) =>
+    unwrap(
+      await api.POST('/api/analyst/disputes/{dispute_id}/decision', {
+        params: { path: { dispute_id: disputeId } },
+        body,
+      }),
+    ),
+
+  scoreHistory: async (sellerId: string) =>
+    unwrap(
+      await api.GET('/api/sellers/{seller_id}/score-history', {
+        params: { path: { seller_id: sellerId } },
+      }),
+    ),
 }

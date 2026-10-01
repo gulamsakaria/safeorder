@@ -5,6 +5,7 @@ import type { Schemas } from '../api/client'
 import { useAction, useAsync } from '../api/hooks'
 import { Countdown } from '../components/Countdown'
 import { ErrorNotice } from '../components/ErrorNotice'
+import { UserText } from '../components/UserText'
 import { Button, Card, Label, Spinner, TextArea } from '../components/ui'
 import { useI18n } from '../i18n/useI18n'
 import { formatDateTime } from '../lib/format'
@@ -14,11 +15,6 @@ const POLL_MS = 5000
 const MAX_RESPONSE = 2000
 const MAX_EVIDENCE = 4000
 const CLOSED: Schemas['DisputeStatus'][] = ['RESOLVED', 'ESCALATED']
-
-/** User-written text is rendered as plain text; React escapes it, and line breaks are kept. */
-function UserText({ children }: { children: string }) {
-  return <p className="whitespace-pre-wrap break-words">{children}</p>
-}
 
 function EvidenceList({ dispute }: { dispute: Schemas['DisputeOut'] }) {
   const { t, lang } = useI18n()

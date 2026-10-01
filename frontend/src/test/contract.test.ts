@@ -34,6 +34,11 @@ describe('API contract', () => {
       ['/api/sim/courier-event', 'post'],
       ['/api/sim/advance-clock', 'post'],
       ['/api/demo/reset', 'post'],
+      ['/api/analyst/queue', 'get'],
+      ['/api/analyst/disputes/{dispute_id}', 'get'],
+      ['/api/disputes/{dispute_id}/analyze', 'post'],
+      ['/api/analyst/disputes/{dispute_id}/decision', 'post'],
+      ['/api/sellers/{seller_id}/score-history', 'get'],
     ] as const
     for (const [path, method] of used) {
       expect(openapi.paths[path]?.[method], `${method} ${path}`).toBeDefined()
@@ -41,7 +46,7 @@ describe('API contract', () => {
   })
 
   it('the mock server answers every endpoint the screens use', () => {
-    expect(handlers.length).toBe(12)
+    expect(handlers.length).toBe(17) // 12 for the buyer and seller screens, 5 for the analyst console
   })
 
   it('errors are documented in the real format (code and message), not the framework default', () => {

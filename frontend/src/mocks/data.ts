@@ -70,9 +70,13 @@ interface MockOrder {
 export const store = {
   orders: new Map<string, MockOrder>(),
   disputes: new Map<string, Schemas['DisputeOut']>(),
+  analyses: new Map<string, Schemas['AnalysisOut']>(),
+  decisions: new Map<string, Schemas['DecisionRecordOut'][]>(),
+  snapshots: new Map<string, Schemas['SnapshotOut'][]>(),
   offsetMs: 0,
   orderSeq: 0,
   disputeSeq: 0,
+  snapshotSeq: 0,
 }
 
 const STORAGE_KEY = 'safeorder.mock.store'
@@ -85,6 +89,10 @@ export function persist(): void {
       JSON.stringify({
         orders: [...store.orders.entries()],
         disputes: [...store.disputes.entries()],
+        analyses: [...store.analyses.entries()],
+        decisions: [...store.decisions.entries()],
+        snapshots: [...store.snapshots.entries()],
+        snapshotSeq: store.snapshotSeq,
         offsetMs: store.offsetMs,
         orderSeq: store.orderSeq,
         disputeSeq: store.disputeSeq,
@@ -102,6 +110,10 @@ function restore(): void {
     const saved = JSON.parse(raw)
     store.orders = new Map(saved.orders)
     store.disputes = new Map(saved.disputes)
+    store.analyses = new Map(saved.analyses)
+    store.decisions = new Map(saved.decisions)
+    store.snapshots = new Map(saved.snapshots)
+    store.snapshotSeq = saved.snapshotSeq
     store.offsetMs = saved.offsetMs
     store.orderSeq = saved.orderSeq
     store.disputeSeq = saved.disputeSeq
@@ -113,6 +125,10 @@ function restore(): void {
 export function resetStore(): void {
   store.orders.clear()
   store.disputes.clear()
+  store.analyses.clear()
+  store.decisions.clear()
+  store.snapshots.clear()
+  store.snapshotSeq = 0
   store.offsetMs = 0
   store.orderSeq = 0
   store.disputeSeq = 0

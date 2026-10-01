@@ -262,3 +262,41 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
   toggle). No browser errors. Google Fonts could not be loaded in this sandbox, so the Noto Sans
   Bengali webfont itself was not seen; the system fallback rendered Bangla correctly.
 - **The Bangla interface text was drafted by the assistant and needs review by a native speaker.**
+
+## Step 10
+
+- The backend half of this step (decision endpoint, ledger move, trust feedback, before/after
+  snapshots) was built in Step 8. Step 10 is the analyst console: `/analyst` (queue),
+  `/analyst/dispute/:id` (case page) and `/analyst/seller/:id` (score history). These screens use a
+  wider layout than the phone-sized buyer screens.
+- **Case page** answers the three guideline questions (what happened, why is it risky, what should
+  upay do next) from the analyzer's bilingual sections, and shows flags, the four class probabilities
+  as bars (labelled "a suggestion, not a decision"), the route and why a human must look, the model
+  versions used, the timeline, and the buyer's and seller's sides next to each other. Evidence,
+  claims and notes are shown as plain text (tests inject `<script>` and `<img onerror>`).
+  An injection attempt gets a warning banner, and the text stays visible exactly as written.
+- **Decisions:** the four buttons stay disabled until a non-blank note is written. A money-moving
+  or state-changing choice asks for one more confirmation that states what will happen. The only
+  one-click path is the fast-lane button, which exists only when the analyzer routed the case to
+  the fast lane; it records a default note if none was typed. Nothing happens automatically, and
+  under senior review only a refund or a rejection is offered.
+- **Without a trained classifier** the real API answers `503 CLASSIFIER_UNAVAILABLE` on "run the
+  analysis". The console says so in plain words and the human can still decide, without any
+  recommendation shown. No stand-in numbers are ever displayed in real mode.
+- **Mock mode** shows an *illustration* of the analysis built by simple rules, labelled
+  `mock_illustration` in the model versions. It exists so the console can be shown and tested
+  without a classifier; it is not a model.
+- **Verified in Chromium against the real API and the real trust model**, with a stand-in
+  classifier injected only for this check (a throw-away script outside the repository; the version
+  shows as `fixed_test_v0` on screen). Path: buyer checks `Synthetic Shop 1334` (score 76), places
+  an order, parcel delivered, buyer reports a wrong item, seller responds, analyst opens the case,
+  runs the analysis, writes a note, confirms the refund. The order was still held right before the
+  confirmation; afterwards it was `REFUNDED`, the books balanced, the seller's score went 76 -> 65
+  and the score history showed `INITIAL:76 -> DISPUTE_RESOLVED:65`. No browser errors.
+  Seller 1334 was chosen because a refund moves a seller with only about 44 orders visibly;
+  for the large sellers a single refund barely moves the score (see Step 8).
+- **Bug found by looking at the screenshot:** the analyzer's timeline names
+  (`BUYER_DISPUTE_FILED`, `SELLER_RESPONDED`) had no translation and appeared as raw codes. A test now
+  fails if any timeline event is shown untranslated.
+- There is still **no sign-in**: the analyst id is a free-text field remembered in the browser.
+- The Bangla text of the console was drafted by the assistant and needs native review.

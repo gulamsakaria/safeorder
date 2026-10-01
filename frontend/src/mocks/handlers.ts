@@ -1,7 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import type { Schemas } from '../api/client'
 import {
-  HOLD_HOURS,
   SELLERS,
   SELLER_DEADLINE_HOURS,
   TRUST,
@@ -16,35 +15,8 @@ import {
   store,
   transfer,
 } from './data'
-
-type Json<T> = Promise<T>
-const REPORTABLE: Schemas['OrderStatus'][] = ['HELD', 'DELIVERED', 'DISPUTABLE']
-
-function problem(status: number, code: string, message: string) {
-  return HttpResponse.json({ error: { code, message } }, { status })
-}
-
-function view(order: Schemas['OrderOut'], code?: string): Schemas['OrderOut'] {
-  return {
-    ...order,
-    can_report_problem: REPORTABLE.includes(order.status),
-    server_time: iso(nowMs()),
-    delivery_code: code ?? null,
-    ledger_balanced:
-      order.ledger.reduce((s, e) => s + e.debit, 0) === order.ledger.reduce((s, e) => s + e.credit, 0),
-  }
-}
-
-function findOrder(id: string) {
-  return store.orders.get(id)
-}
-
-function deliver(order: Schemas['OrderOut'], event: string) {
-  order.status = 'DELIVERED'
-  order.delivered_at = iso(nowMs())
-  order.hold_until = hoursFromNow(HOLD_HOURS)
-  addEvent(order, event)
-}
+import { analystHandlers, ensureSnapshot } from './analyst'
+import { REPORTABLE, deliver, findOrder, problem, view } from './shared'
 
 /**
  * An in-browser stand-in for the API. Request and response shapes use the generated types, so a
@@ -64,6 +36,8 @@ export const handlers = [
     const body = (await request.json()) as Schemas['TrustCheckRequest']
     const result = TRUST[body.seller_id ?? '']
     if (!result) return problem(404, 'NOT_FOUND', 'seller not found')
+    ensureSnapshot(result.seller_id)
+    persist()
     return HttpResponse.json<Schemas['TrustCheckResponse']>(result)
   }),
 
@@ -144,7 +118,7 @@ export const handlers = [
     return HttpResponse.json<Schemas['OrderOut']>(view(found.order))
   }),
 
-  http.post('*/api/sim/advance-clock', async ({ request }): Json<Response> => {
+  http.post('*/api/sim/advance-clock', async ({ request }): Promise<Response> => {
     const { hours } = (await request.json()) as Schemas['AdvanceClockRequest']
     if (hours < 0) return problem(422, 'VALIDATION_ERROR', 'hours: must be >= 0')
     store.offsetMs += hours * 3_600_000
@@ -238,4 +212,5 @@ export const handlers = [
     persist()
     return HttpResponse.json<Schemas['DisputeOut']>(dispute)
   }),
+  ...analystHandlers,
 ]

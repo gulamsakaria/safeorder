@@ -11,6 +11,9 @@ The yellow **Sandbox banner is part of the layout** and cannot be hidden by any 
 | `/order/:id` | Safe Order tracker: status, courier, delivery code entry, hold countdown, timeline, ledger, "report a problem" |
 | `/order/:id/report` | Buyer dispute form (photo upload is a disabled placeholder; evidence is described in text) |
 | `/dispute/:id` | Dispute page with a buyer view (add evidence) and a seller view (respond before the deadline) |
+| `/analyst` | Analyst queue: human-review cases first, filter by route |
+| `/analyst/dispute/:id` | Case page: the three guideline questions, flags, probabilities, both sides, timeline, decision panel with a required note, score before and after |
+| `/analyst/seller/:id` | A seller's trust-score history |
 | `/demo` | Sandbox controls: courier events, move the simulated clock, reset |
 
 ## Data source: one switch
