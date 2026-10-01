@@ -18,6 +18,36 @@ import {
 import { analystHandlers, ensureSnapshot } from './analyst'
 import { REPORTABLE, deliver, findOrder, problem, view } from './shared'
 
+function placeOrder(body: Schemas['CreateOrderRequest']) {
+  store.orderSeq += 1
+  const id = `O-${String(store.orderSeq).padStart(4, '0')}`
+  const order: Schemas['OrderOut'] = {
+    id,
+    buyer_id: body.buyer_id,
+    seller_id: body.seller_id,
+    product_category: body.product_category,
+    amount_bdt: body.amount_bdt,
+    status: 'HELD',
+    placed_at: iso(nowMs()),
+    delivered_at: null,
+    hold_until: null,
+    released_at: null,
+    courier_status: 'not_dispatched',
+    ledger: [],
+    ledger_balanced: true,
+    timeline: [],
+    dispute_ids: [],
+    can_report_problem: true,
+    server_time: iso(nowMs()),
+    delivery_code: null,
+  }
+  transfer(order, 'BUYER_WALLET', 'HOLD', 'SAFE_ORDER_HOLD')
+  addEvent(order, 'ORDER_PLACED_AND_HELD')
+  const code = deliveryCodeFor(store.orderSeq)
+  store.orders.set(id, { order, code, dispatched: false })
+  return { order, code }
+}
+
 /**
  * An in-browser stand-in for the API. Request and response shapes use the generated types, so a
  * change in docs/openapi.json breaks the build here before it can break a screen.
@@ -45,32 +75,7 @@ export const handlers = [
     const body = (await request.json()) as Schemas['CreateOrderRequest']
     if (!SELLERS.some((s) => s.id === body.seller_id)) return problem(404, 'NOT_FOUND', 'seller not found')
     if (!(body.amount_bdt > 0)) return problem(422, 'VALIDATION_ERROR', 'amount_bdt: must be positive')
-    store.orderSeq += 1
-    const id = `O-${String(store.orderSeq).padStart(4, '0')}`
-    const order: Schemas['OrderOut'] = {
-      id,
-      buyer_id: body.buyer_id,
-      seller_id: body.seller_id,
-      product_category: body.product_category,
-      amount_bdt: body.amount_bdt,
-      status: 'HELD',
-      placed_at: iso(nowMs()),
-      delivered_at: null,
-      hold_until: null,
-      released_at: null,
-      courier_status: 'not_dispatched',
-      ledger: [],
-      ledger_balanced: true,
-      timeline: [],
-      dispute_ids: [],
-      can_report_problem: true,
-      server_time: iso(nowMs()),
-      delivery_code: null,
-    }
-    transfer(order, 'BUYER_WALLET', 'HOLD', 'SAFE_ORDER_HOLD')
-    addEvent(order, 'ORDER_PLACED_AND_HELD')
-    const code = deliveryCodeFor(store.orderSeq)
-    store.orders.set(id, { order, code, dispatched: false })
+    const { order, code } = placeOrder(body)
     persist()
     return HttpResponse.json<Schemas['OrderOut']>(view(order, code), { status: 201 })
   }),
@@ -127,13 +132,35 @@ export const handlers = [
     return HttpResponse.json<Schemas['ClockOut']>({ now: iso(nowMs()), fired })
   }),
 
-  http.post('*/api/demo/reset', async () => {
+  http.post('*/api/demo/reset', async ({ request }) => {
+    const { scenario_set: set = 'default' } = (await request.json()) as Schemas['DemoResetRequest']
     resetStore()
+    // The mock only covers the scenarios that need no analyzer: 1, 2 and 5 (the dispute scenarios
+    // can be played by hand in mock mode, and are set up for real by the backend).
+    const scenarios: Schemas['DemoScenarioOut'][] = []
+    if (set === 'demo') {
+      const name = (id: string) => SELLERS.find((s) => s.id === id)?.display_name ?? null
+      const { order, code } = placeOrder({
+        buyer_id: 'B-000001',
+        seller_id: 'S-0001',
+        amount_bdt: 1800,
+        product_category: 'shoes',
+      })
+      scenarios.push(
+        { number: 1, key: 'fake_seller', seller_id: 'S-0002', seller_name: name('S-0002'), detail: '' },
+        {
+          number: 2, key: 'happy_path', seller_id: 'S-0001', seller_name: name('S-0001'),
+          buyer_id: 'B-000001', order_id: order.id, delivery_code: code, detail: '',
+        },
+        { number: 5, key: 'honest_new', seller_id: 'S-0003', seller_name: name('S-0003'), detail: '' },
+      )
+    }
     persist()
     return HttpResponse.json<Schemas['DemoResetOut']>({
-      scenario_set: 'default',
+      scenario_set: set,
       loaded: { sellers: SELLERS.length, buyers: 1 },
       now: iso(nowMs()),
+      scenarios,
     })
   }),
 

@@ -53,8 +53,8 @@ export const calls = {
   advanceClock: async (hours: number) =>
     unwrap(await api.POST('/api/sim/advance-clock', { body: { hours } })),
 
-  demoReset: async () =>
-    unwrap(await api.POST('/api/demo/reset', { body: { scenario_set: 'default' } })),
+  demoReset: async (scenarioSet: 'default' | 'demo' | 'empty' = 'default') =>
+    unwrap(await api.POST('/api/demo/reset', { body: { scenario_set: scenarioSet } })),
 
   analystQueue: async (query: { route?: string; min_amount_bdt?: number } = {}) =>
     unwrap(await api.GET('/api/analyst/queue', { params: { query } })),

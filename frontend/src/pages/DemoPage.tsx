@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { calls } from '../api/calls'
 import type { Schemas } from '../api/client'
 import { useAction } from '../api/hooks'
@@ -6,6 +7,8 @@ import { ErrorNotice } from '../components/ErrorNotice'
 import { Button, Card, Label, TextInput } from '../components/ui'
 import { useI18n } from '../i18n/useI18n'
 import { formatDateTime } from '../lib/format'
+
+type Scenario = Schemas['DemoScenarioOut']
 
 const COURIER_EVENTS: Schemas['CourierStatus'][] = ['in_transit', 'delivered', 'lost', 'returned']
 const QUICK_HOURS = [24, 72]
@@ -16,6 +19,7 @@ export function DemoPage() {
   const [orderId, setOrderId] = useState('')
   const [hours, setHours] = useState('24')
   const [note, setNote] = useState<string>()
+  const [scenarios, setScenarios] = useState<Scenario[] | null>(null)
 
   const courier = useAction(async (status: Schemas['CourierStatus']) => {
     const out = await calls.courierEvent(orderId.trim(), status)
@@ -28,9 +32,15 @@ export function DemoPage() {
   })
   const reset = useAction(async () => {
     await calls.demoReset()
+    setScenarios(null)
     setNote(t('demo.reset.done'))
   })
-  const error = courier.error ?? clock.error ?? reset.error
+  const load = useAction(async () => {
+    const out = await calls.demoReset('demo')
+    setScenarios(out.scenarios)
+    setNote(t('demo.loaded'))
+  })
+  const error = courier.error ?? clock.error ?? reset.error ?? load.error
 
   return (
     <Card className="space-y-4">
@@ -84,6 +94,21 @@ export function DemoPage() {
         </div>
       </div>
 
+      <section aria-label={t('demo.scenarios')} className="space-y-3">
+        <h3 className="font-bold">{t('demo.scenarios')}</h3>
+        <p className="text-sm text-slate-600">{t('demo.scenarios.note')}</p>
+        <Button variant="secondary" disabled={load.pending} onClick={() => void load.run()}>
+          {t('demo.load')}
+        </Button>
+        {scenarios && (
+          <ol className="space-y-3">
+            {scenarios.map((s) => (
+              <ScenarioCard key={s.key} scenario={s} />
+            ))}
+          </ol>
+        )}
+      </section>
+
       <Button variant="danger" disabled={reset.pending} onClick={() => void reset.run()}>
         {t('demo.reset')}
       </Button>
@@ -95,5 +120,43 @@ export function DemoPage() {
         </p>
       )}
     </Card>
+  )
+}
+
+function ScenarioCard({ scenario: s }: { scenario: Scenario }) {
+  const { t, num } = useI18n()
+  const link = 'font-semibold text-blue-800 underline'
+  return (
+    <li className="rounded-xl border border-slate-200 p-3" data-testid={`scenario-${s.key}`}>
+      <p className="font-semibold">
+        {num(s.number)}. {t(`demo.scenario.${s.key}.title`)}
+      </p>
+      <p className="text-sm text-slate-600">{t(`demo.scenario.${s.key}.what`)}</p>
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+        {s.seller_name && (
+          <Link className={link} to={`/?q=${encodeURIComponent(s.seller_name)}`}>
+            {t('demo.open.check')} ({s.seller_id})
+          </Link>
+        )}
+        {s.order_id && (
+          <Link className={link} to={`/order/${s.order_id}`}>
+            {t('demo.open.order')} {s.order_id}
+          </Link>
+        )}
+        {s.dispute_id && (
+          <Link className={link} to={`/analyst/dispute/${s.dispute_id}`}>
+            {t('demo.open.case')} {s.dispute_id}
+          </Link>
+        )}
+        {s.delivery_code && (
+          <span>
+            {t('demo.code')}: <b className="tabular-nums">{s.delivery_code}</b>
+          </span>
+        )}
+      </div>
+      {s.analysis && (
+        <p className="mt-1 text-sm text-slate-500">{t(`demo.analysis.${s.analysis}`)}</p>
+      )}
+    </li>
   )
 }

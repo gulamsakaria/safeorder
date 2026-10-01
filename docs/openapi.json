@@ -505,6 +505,14 @@
           "scenario_set": {
             "title": "Scenario Set",
             "type": "string"
+          },
+          "scenarios": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DemoScenarioOut"
+            },
+            "title": "Scenarios",
+            "type": "array"
           }
         },
         "required": [
@@ -525,6 +533,106 @@
           }
         },
         "title": "DemoResetRequest",
+        "type": "object"
+      },
+      "DemoScenarioOut": {
+        "properties": {
+          "analysis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis"
+          },
+          "buyer_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyer Id"
+          },
+          "delivery_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Code"
+          },
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "dispute_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispute Id"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "order_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Id"
+          },
+          "seller_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Id"
+          },
+          "seller_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Name"
+          }
+        },
+        "required": [
+          "number",
+          "key"
+        ],
+        "title": "DemoScenarioOut",
         "type": "object"
       },
       "DisputeOut": {
@@ -1628,7 +1736,7 @@
     },
     "/api/demo/reset": {
       "post": {
-        "description": "Demo only: wipe the database and the simulated clock, then load a scenario set.",
+        "description": "Demo only: wipe the database and the simulated clock, then load a scenario set.\n\nThe ``demo`` set also creates the seven demo scenarios (BLUEPRINT.md Section 12.2).",
         "operationId": "reset_api_demo_reset_post",
         "requestBody": {
           "content": {

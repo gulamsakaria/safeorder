@@ -76,6 +76,8 @@ export interface paths {
         /**
          * Reset
          * @description Demo only: wipe the database and the simulated clock, then load a scenario set.
+         *
+         *     The ``demo`` set also creates the seven demo scenarios (BLUEPRINT.md Section 12.2).
          */
         post: operations["reset_api_demo_reset_post"];
         delete?: never;
@@ -557,6 +559,11 @@ export interface components {
             now: string;
             /** Scenario Set */
             scenario_set: string;
+            /**
+             * Scenarios
+             * @default []
+             */
+            scenarios: components["schemas"]["DemoScenarioOut"][];
         };
         /** DemoResetRequest */
         DemoResetRequest: {
@@ -565,6 +572,32 @@ export interface components {
              * @default default
              */
             scenario_set: string;
+        };
+        /** DemoScenarioOut */
+        DemoScenarioOut: {
+            /** Analysis */
+            analysis?: string | null;
+            /** Buyer Id */
+            buyer_id?: string | null;
+            /** Delivery Code */
+            delivery_code?: string | null;
+            /**
+             * Detail
+             * @default
+             */
+            detail: string;
+            /** Dispute Id */
+            dispute_id?: string | null;
+            /** Key */
+            key: string;
+            /** Number */
+            number: number;
+            /** Order Id */
+            order_id?: string | null;
+            /** Seller Id */
+            seller_id?: string | null;
+            /** Seller Name */
+            seller_name?: string | null;
         };
         /** DisputeOut */
         DisputeOut: {

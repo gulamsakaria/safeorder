@@ -35,6 +35,26 @@ curl -X POST localhost:8000/api/demo/reset -H 'content-type: application/json' \
   call answers `503 CLASSIFIER_UNAVAILABLE`.
 - `/api/sim/*` and `/api/demo/*` are sandbox-only; set `api.demo_endpoints_enabled: false` to disable them.
 
+## Demo scenarios
+
+```bash
+make data && make train && make demo-reset   # prints the ids to use (sellers, orders, disputes)
+```
+
+The same set loads from the hidden `/demo` page ("load scenarios"). Scenarios 3, 4, 6 and 7 need a
+trained dispute classifier before their analysis can run (Step 6); until then they show
+"analysis pending".
+
+## Trained models on Kaggle (private)
+
+```bash
+export KAGGLE_USERNAME=<you> KAGGLE_KEY=<token>      # or `kaggle auth login`
+make kaggle-models    # uploads models/ and the evaluation reports as a new version of the
+                      # private dataset safeorder-trained-models (creates it the first time)
+```
+
+Run it after every training run. It never uploads raw cases or synthetic data.
+
 ## Kaggle explainer notebook
 
 ```bash

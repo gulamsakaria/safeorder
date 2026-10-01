@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { calls } from '../api/calls'
 import { DEMO_BUYER_ID } from '../api/client'
 import type { Schemas } from '../api/client'
@@ -49,7 +49,9 @@ function ScoreMeter({ score }: { score: number }) {
 export function TrustCheckPage() {
   const { t, num } = useI18n()
   const navigate = useNavigate()
-  const [query, setQuery] = useState('')
+  const [params] = useSearchParams()
+  const linked = params.get('q')?.slice(0, 40) ?? ''
+  const [query, setQuery] = useState(linked)
   const [results, setResults] = useState<Schemas['SellerPublic'][] | null>(null)
   const [seller, setSeller] = useState<Schemas['SellerPublic'] | null>(null)
   const [result, setResult] = useState<Schemas['TrustCheckResponse'] | null>(null)
@@ -58,7 +60,11 @@ export function TrustCheckPage() {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState(CATEGORIES[0])
 
-  const search = useAction(async (q: string) => setResults(await calls.searchSellers(q)))
+  const search = useAction(async (q: string) => {
+    const found = await calls.searchSellers(q)
+    setResults(found)
+    return found
+  })
   const check = useAction(async (picked: Schemas['SellerPublic']) => {
     setSeller(picked)
     setResult(null)
@@ -75,6 +81,18 @@ export function TrustCheckPage() {
     })
     if (created.delivery_code) rememberCode(created.id, created.delivery_code)
     navigate(`/order/${created.id}`)
+  })
+
+  // A link such as /?q=Synthetic%20Shop%200001 (used by the demo page) searches once on arrival,
+  // and runs the Trust Check straight away when exactly one seller matches.
+  const linkedRun = useRef(false)
+  useEffect(() => {
+    if (!linked || linkedRun.current) return
+    linkedRun.current = true
+    void (async () => {
+      const found = await search.run(linked)
+      if (found?.length === 1) await check.run(found[0])
+    })()
   })
 
   const onSearch = (e: FormEvent) => {

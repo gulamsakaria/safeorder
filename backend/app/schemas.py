@@ -290,10 +290,24 @@ class MetricsOut(BaseModel):
     reports: dict[str, Any]
 
 
+class DemoScenarioOut(BaseModel):
+    number: int
+    key: str
+    seller_id: str | None = None
+    seller_name: str | None = None
+    buyer_id: str | None = None
+    order_id: str | None = None
+    dispute_id: str | None = None
+    delivery_code: str | None = None
+    analysis: str | None = None
+    detail: str = ""
+
+
 class DemoResetOut(BaseModel):
     scenario_set: str
     loaded: dict[str, int]
     now: str
+    scenarios: list[DemoScenarioOut] = []
 
 
 class ErrorBody(BaseModel):

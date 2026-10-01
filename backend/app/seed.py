@@ -18,7 +18,7 @@ from app.db import create_db, reset_db
 from app.models import Buyer, Seller, SellerDailyStats, SellerFeatures
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCENARIO_SETS = ("empty", "default")
+SCENARIO_SETS = ("empty", "default", "demo")
 INSERT_CHUNK = 20_000
 
 # Wallet numbers use a SIM- prefix so they can never be mistaken for a real phone number.
@@ -103,7 +103,8 @@ def reset_and_load(
     """Reset the database and the simulated clock, then load a scenario set.
 
     ``empty`` leaves the tables empty. ``default`` loads the generated v1 sellers, buyers, daily
-    stats and trust features from ``data/synthetic/v1`` (run ``make data`` first).
+    stats and trust features from ``data/synthetic/v1`` (run ``make data`` first). ``demo`` loads
+    the same data; the demo scenarios are then set up by ``app.demo_scenarios`` through the API.
     """
     if scenario_set not in SCENARIO_SETS:
         raise ValueError(f"unknown scenario_set {scenario_set!r}")

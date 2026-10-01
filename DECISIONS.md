@@ -300,3 +300,41 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
   fails if any timeline event is shown untranslated.
 - There is still **no sign-in**: the analyst id is a free-text field remembered in the browser.
 - The Bangla text of the console was drafted by the assistant and needs native review.
+
+
+## Step 11 - Demo scenarios and the trained models on Kaggle
+
+- **The seven scenarios (BLUEPRINT.md 12.2) are set up through the real API**, not by writing rows
+  directly (`backend/app/demo_scenarios.py`, run by `make demo-reset` or by `POST /api/demo/reset`
+  with `scenario_set: "demo"`). A demo run therefore exercises the same code a judge would.
+- **Sellers are chosen by rule from the loaded data, never by hard-coded id.** Fake seller: a
+  high-risk `fake_burst` seller whose 24-hour buyer count is closest to 62 (it is exactly 62,
+  S-1411, score 6). Happy path: the highest-scoring TRUSTED established seller with at least 100
+  orders. Honest new seller: a LIMITED_HISTORY seller with the fewest orders. Same data gives the
+  same choice (tested by building two databases and comparing).
+- **The "score drops" seller is chosen by simulation, and the finding is uncomfortable.** For
+  honest established sellers one refund moves the score by 0 to 4 points (1359 of 1439 sellers
+  move 0). Only younger sellers with a short good record move visibly, so scenario 3 uses the
+  TRUSTED `honest_new` seller with the largest simulated drop of at least 5 points (S-1334,
+  76 -> 65). The demo must not suggest that one refund wrecks a long-standing seller.
+- **Scenario 4 builds a real repeat claimant**: the buyer files two earlier claims on other
+  sellers, each rejected by a seed analyst called `demo-seed` (visible in the audit log), then
+  the third claim comes after the code was used. These two earlier cases add one completed order
+  each to those two sellers' counters, as the feedback loop does for any rejected claim.
+- **The scenarios stop where the presenter takes over.** Orders are held, disputes are filed and
+  seller responses are in, but nothing is released, refunded or decided.
+- **Analysis (scenarios 3, 4, 6) runs only if a trained classifier exists.** There is none yet
+  (Step 6 needs the dispute cases), so these show `pending_classifier` and no numbers. Scenario 7
+  (judge types a case) also needs it. Tests inject a fixed test classifier to check the rule-based
+  parts: the false claim carries CODE_CONTRADICTION and REPEAT_CLAIMANT, and the injection case
+  carries the injection flag; both route to human review.
+- **UI:** the hidden `/demo` page loads the scenarios and shows a card per scenario with links to
+  Trust Check, the order and the analyst case, plus the sandbox delivery code. Trust Check accepts
+  `/?q=<seller name>` and runs the check at once when exactly one seller matches. Mock mode covers
+  scenarios 1, 2 and 5 only; the dispute scenarios are set up by the real backend.
+- **Trained models are kept on the user's Kaggle, private** (`make kaggle-models`, script
+  `scripts/publish_models_kaggle.py`): dataset `safeorder-trained-models` holds `models/`,
+  the evaluation reports and `MODELS.md`, an index generated from the files (sizes, SHA-256 and the
+  values read from each `*.meta.json`, so no number is typed by hand). Raw dispute cases and the
+  generated synthetic data are never included. Rerun it after every training run; later models
+  (dispute classifier, any fine-tuned transformer) are picked up automatically.
