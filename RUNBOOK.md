@@ -35,6 +35,18 @@ curl -X POST localhost:8000/api/demo/reset -H 'content-type: application/json' \
   call answers `503 CLASSIFIER_UNAVAILABLE`.
 - `/api/sim/*` and `/api/demo/*` are sandbox-only; set `api.demo_endpoints_enabled: false` to disable them.
 
+## Rehearsal and limits
+
+```bash
+make rehearse        # three clean demo runs from a reset (stand-in classifier until Step 6)
+make secret-scan
+```
+
+Config `api.max_body_bytes` and `api.rate_limit_per_minute` (0 = off) control the request limits;
+`api.demo_endpoints_enabled: false` removes the `/api/sim` and `/api/demo` routes. Tag the freeze
+(`git tag mvp-freeze && git push origin mvp-freeze`) only after the dispute classifier is in and
+`make test`, `make rehearse` and the browser check pass.
+
 ## Documents, secret scan, Hugging Face (private)
 
 ```bash

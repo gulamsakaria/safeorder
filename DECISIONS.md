@@ -398,3 +398,29 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
   repository is refused; there is no flag to publish). **It has only been run with `--dry-run`:
   nothing has been uploaded to Hugging Face**, because the repository name and the decision to
   put the model there belong to the team.
+
+
+## Step 15 - Hardening (the freeze itself is NOT done)
+
+- **`backend/app/security.py`**, one small ASGI middleware: request bodies over
+  `api.max_body_bytes` (64 KB) get 413, announced or streamed; at most `api.rate_limit_per_minute`
+  (240) requests per client address in a sliding minute, then 429 with `Retry-After` (`/health`
+  exempt, 0 switches it off); `nosniff`, `X-Frame-Options: DENY` and `Cache-Control: no-store` on
+  every response. The limit is in memory and per process: enough for the sandbox demo, not a
+  defence against a distributed attack. Behind a proxy every request would share the proxy's
+  address, so put a proper limiter in front before any real deployment.
+- **Input validation was already in the request models** (length and range limits). New tests send
+  20 hostile values (wrong types, huge numbers, control and right-to-left characters, SQL and
+  script text, deep nesting) into every field of every write endpoint and require no 5xx and valid
+  JSON back, plus malformed JSON bodies. HTML escaping on screen is covered by the earlier
+  frontend tests that inject `<script>` and `<img onerror>`.
+- **`make rehearse`** (`scripts/demo_rehearsal.py`): three runs from a clean reset (fresh database,
+  reset clock), each loading the demo scenarios through the API and playing scenarios 1 to 6;
+  results must be identical across runs. **It uses a fixed stand-in classifier**, because the
+  dispute classifier is not trained, so it rehearses flags, routing, the injection screen, the
+  ledger and the trust feedback, not classification quality. Scenario 7 is not rehearsed.
+  Result: 3 clean runs, identical.
+- **`make secret-scan`**: 0 findings over every tracked file; also a test.
+- **Not done on purpose:** the `mvp-freeze` tag. The blueprint's P0 list still lacks Steps 5 and 6
+  (dispute cases and classifier), so freezing now would freeze an incomplete MVP. Also not done:
+  the backup video (a person must record it) and a run of the real demo with a trained classifier.

@@ -52,6 +52,8 @@ api:
   max_evidence_chars: 4000
   max_note_chars: 2000
   search_limit: 10
+  max_body_bytes: 65536            # larger request bodies are refused with 413
+  rate_limit_per_minute: 240       # per client address; 0 switches the limit off (429 when exceeded)
 
 # Synthetic seller generator (BLUEPRINT.md Section 8.2). Every number here is an assumption,
 # not an observation of any real market. Ranges are [low, high].
