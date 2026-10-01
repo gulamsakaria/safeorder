@@ -24,10 +24,10 @@ data:
 	PYTHONPATH=backend:. $(PY) -m scripts.generate_sellers --version both --load-db
 
 train:
-	@echo "not implemented yet (Steps 4 and 6)"
+	PYTHONPATH=backend:. $(PY) -m scripts.train_trust
 
 eval:
-	@echo "not implemented yet (Step 12)"
+	PYTHONPATH=backend:. $(PY) -m eval.trust_eval
 
 demo-reset:
 	@echo "not implemented yet (Step 11)"

@@ -1,0 +1,471 @@
+{
+  "fairness_and_policy_v2": {
+    "blueprint_literal": {
+      "band_counts": {
+        "CAUTION": 34,
+        "HIGH_RISK": 384,
+        "LIMITED_HISTORY": 533,
+        "TRUSTED": 2049
+      },
+      "false_positive_rate": {
+        "chronic_poor_service": 0.014285714285714285,
+        "honest_established": 0.0,
+        "honest_new": 0.011666666666666667
+      },
+      "limited_history_share": {
+        "chronic_poor_service": 0.0,
+        "honest_established": 0.0,
+        "honest_new": 0.3883333333333333
+      },
+      "precision_of_high_risk_band": 0.9739583333333334,
+      "recall_by_archetype": {
+        "collusive_ring": 1.0,
+        "fake_burst": 0.0,
+        "slow_scammer": 0.9333333333333333
+      },
+      "recall_high_risk_overall": 0.5420289855072464
+    },
+    "no_limited_history_band": {
+      "band_counts": {
+        "CAUTION": 44,
+        "HIGH_RISK": 685,
+        "TRUSTED": 2271
+      },
+      "false_positive_rate": {
+        "chronic_poor_service": 0.014285714285714285,
+        "honest_established": 0.0,
+        "honest_new": 0.013333333333333334
+      },
+      "limited_history_share": {
+        "chronic_poor_service": 0.0,
+        "honest_established": 0.0,
+        "honest_new": 0.0
+      },
+      "precision_of_high_risk_band": 0.983941605839416,
+      "recall_by_archetype": {
+        "collusive_ring": 1.0,
+        "fake_burst": 1.0,
+        "slow_scammer": 0.9333333333333333
+      },
+      "recall_high_risk_overall": 0.9768115942028985
+    },
+    "override_default": {
+      "band_counts": {
+        "CAUTION": 34,
+        "HIGH_RISK": 684,
+        "LIMITED_HISTORY": 233,
+        "TRUSTED": 2049
+      },
+      "false_positive_rate": {
+        "chronic_poor_service": 0.014285714285714285,
+        "honest_established": 0.0,
+        "honest_new": 0.011666666666666667
+      },
+      "limited_history_share": {
+        "chronic_poor_service": 0.0,
+        "honest_established": 0.0,
+        "honest_new": 0.3883333333333333
+      },
+      "precision_of_high_risk_band": 0.9853801169590644,
+      "recall_by_archetype": {
+        "collusive_ring": 1.0,
+        "fake_burst": 1.0,
+        "slow_scammer": 0.9333333333333333
+      },
+      "recall_high_risk_overall": 0.9768115942028985
+    }
+  },
+  "latency": {
+    "budget_ms": 50,
+    "max_ms": 2.8299010000409908,
+    "mean_ms": 0.34868151504362693,
+    "p95_ms": 0.4817773000354463,
+    "samples": 299,
+    "within_budget": true
+  },
+  "model_version": "trust_v1",
+  "note": "Synthetic data only; not validated on real data. The noisy label is the dataset's is_high_risk (about 4% flipped at random); the clean label is archetype-based and easier, so treat it as a diagnostic, not a headline.",
+  "reasons_v2": {
+    "all_within_range": true,
+    "max_reasons": 4,
+    "min_reasons": 4,
+    "sellers_checked": 3000
+  },
+  "target_false_positive_rate": 0.05,
+  "test_v2": {
+    "clean_label": {
+      "age_rule_baseline": {
+        "false_positive_rate": 0.07056277056277056,
+        "flagged_share": 0.15433333333333332,
+        "precision": 0.6479481641468683,
+        "recall": 0.43478260869565216
+      },
+      "age_score_baseline": {
+        "n": 3000,
+        "positives": 690,
+        "pr_auc": 0.612550992018036,
+        "recall_at_target_fpr": {
+          "false_positive_rate": 0.045021645021645025,
+          "recall": 0.39710144927536234,
+          "threshold": -9.0
+        },
+        "roc_auc": 0.849534788882615
+      },
+      "calibration": {
+        "bins": [
+          {
+            "bin": 0,
+            "mean_predicted": 0.04861581335078641,
+            "n": 1971,
+            "observed_rate": 0.0010147133434804667
+          },
+          {
+            "bin": 1,
+            "mean_predicted": 0.13398902015537675,
+            "n": 246,
+            "observed_rate": 0.012195121951219513
+          },
+          {
+            "bin": 2,
+            "mean_predicted": 0.24719528580712266,
+            "n": 53,
+            "observed_rate": 0.018867924528301886
+          },
+          {
+            "bin": 3,
+            "mean_predicted": 0.3478086556152945,
+            "n": 16,
+            "observed_rate": 0.0
+          },
+          {
+            "bin": 4,
+            "mean_predicted": 0.4558169574650329,
+            "n": 16,
+            "observed_rate": 0.25
+          },
+          {
+            "bin": 5,
+            "mean_predicted": 0.5503867179297447,
+            "n": 13,
+            "observed_rate": 0.46153846153846156
+          },
+          {
+            "bin": 6,
+            "mean_predicted": 0.6618252266223811,
+            "n": 21,
+            "observed_rate": 0.5714285714285714
+          },
+          {
+            "bin": 7,
+            "mean_predicted": 0.7496640225289196,
+            "n": 24,
+            "observed_rate": 0.9166666666666666
+          },
+          {
+            "bin": 8,
+            "mean_predicted": 0.8594036479090701,
+            "n": 101,
+            "observed_rate": 1.0
+          },
+          {
+            "bin": 9,
+            "mean_predicted": 0.9462381567883319,
+            "n": 539,
+            "observed_rate": 1.0
+          }
+        ],
+        "brier": 0.012679441388932443,
+        "ece": 0.06499390421114035
+      },
+      "model": {
+        "n": 3000,
+        "positives": 690,
+        "pr_auc": 0.9967239097078064,
+        "recall_at_target_fpr": {
+          "false_positive_rate": 0.021645021645021644,
+          "recall": 0.9927536231884058,
+          "threshold": 0.28540087095802535
+        },
+        "roc_auc": 0.9984597528075788
+      }
+    },
+    "noisy_label": {
+      "age_rule_baseline": {
+        "false_positive_rate": 0.075,
+        "flagged_share": 0.15433333333333332,
+        "precision": 0.6371490280777538,
+        "recall": 0.3881578947368421
+      },
+      "age_score_baseline": {
+        "n": 3000,
+        "positives": 760,
+        "pr_auc": 0.5851633155091538,
+        "recall_at_target_fpr": {
+          "false_positive_rate": 0.049107142857142856,
+          "recall": 0.3526315789473684,
+          "threshold": -9.0
+        },
+        "roc_auc": 0.8033767034774437
+      },
+      "calibration": {
+        "bins": [
+          {
+            "bin": 0,
+            "mean_predicted": 0.04861581335078641,
+            "n": 1971,
+            "observed_rate": 0.04211060375443937
+          },
+          {
+            "bin": 1,
+            "mean_predicted": 0.13398902015537675,
+            "n": 246,
+            "observed_rate": 0.036585365853658534
+          },
+          {
+            "bin": 2,
+            "mean_predicted": 0.24719528580712266,
+            "n": 53,
+            "observed_rate": 0.03773584905660377
+          },
+          {
+            "bin": 3,
+            "mean_predicted": 0.3478086556152945,
+            "n": 16,
+            "observed_rate": 0.0
+          },
+          {
+            "bin": 4,
+            "mean_predicted": 0.4558169574650329,
+            "n": 16,
+            "observed_rate": 0.25
+          },
+          {
+            "bin": 5,
+            "mean_predicted": 0.5503867179297447,
+            "n": 13,
+            "observed_rate": 0.5384615384615384
+          },
+          {
+            "bin": 6,
+            "mean_predicted": 0.6618252266223811,
+            "n": 21,
+            "observed_rate": 0.5714285714285714
+          },
+          {
+            "bin": 7,
+            "mean_predicted": 0.7496640225289196,
+            "n": 24,
+            "observed_rate": 0.8333333333333334
+          },
+          {
+            "bin": 8,
+            "mean_predicted": 0.8594036479090701,
+            "n": 101,
+            "observed_rate": 0.9801980198019802
+          },
+          {
+            "bin": 9,
+            "mean_predicted": 0.9462381567883319,
+            "n": 539,
+            "observed_rate": 0.9721706864564007
+          }
+        ],
+        "brier": 0.04398542333358437,
+        "ece": 0.028993904211140353
+      },
+      "model": {
+        "n": 3000,
+        "positives": 760,
+        "pr_auc": 0.8959852311846358,
+        "recall_at_target_fpr": {
+          "false_positive_rate": 0.033928571428571426,
+          "recall": 0.8789473684210526,
+          "threshold": 0.2682311452348371
+        },
+        "roc_auc": 0.9319857260338344
+      }
+    }
+  },
+  "validation_v1_holdout": {
+    "clean_label": {
+      "age_rule_baseline": {
+        "false_positive_rate": 0.05393258426966292,
+        "flagged_share": 0.175,
+        "precision": 0.7714285714285715,
+        "recall": 0.5225806451612903
+      },
+      "age_score_baseline": {
+        "n": 600,
+        "positives": 155,
+        "pr_auc": 0.7527543896025168,
+        "recall_at_target_fpr": {
+          "false_positive_rate": 0.035955056179775284,
+          "recall": 0.5225806451612903,
+          "threshold": -10.0
+        },
+        "roc_auc": 0.8966799565059804
+      },
+      "calibration": {
+        "bins": [
+          {
+            "bin": 0,
+            "mean_predicted": 0.0478928288985852,
+            "n": 388,
+            "observed_rate": 0.0
+          },
+          {
+            "bin": 1,
+            "mean_predicted": 0.12934289244648633,
+            "n": 48,
+            "observed_rate": 0.020833333333333332
+          },
+          {
+            "bin": 2,
+            "mean_predicted": 0.24353855351520393,
+            "n": 5,
+            "observed_rate": 0.2
+          },
+          {
+            "bin": 3,
+            "mean_predicted": 0.3344508728742019,
+            "n": 3,
+            "observed_rate": 0.0
+          },
+          {
+            "bin": 5,
+            "mean_predicted": 0.5697200026131567,
+            "n": 3,
+            "observed_rate": 0.6666666666666666
+          },
+          {
+            "bin": 6,
+            "mean_predicted": 0.6648851969484797,
+            "n": 2,
+            "observed_rate": 0.5
+          },
+          {
+            "bin": 7,
+            "mean_predicted": 0.7552643717526032,
+            "n": 4,
+            "observed_rate": 0.75
+          },
+          {
+            "bin": 8,
+            "mean_predicted": 0.8650630532565583,
+            "n": 15,
+            "observed_rate": 1.0
+          },
+          {
+            "bin": 9,
+            "mean_predicted": 0.9460154677839652,
+            "n": 132,
+            "observed_rate": 1.0
+          }
+        ],
+        "brier": 0.010790850033503888,
+        "ece": 0.05800600360502858
+      },
+      "model": {
+        "n": 600,
+        "positives": 155,
+        "pr_auc": 0.9982851910429393,
+        "recall_at_target_fpr": {
+          "false_positive_rate": 0.017977528089887642,
+          "recall": 0.9935483870967742,
+          "threshold": 0.24161323471800294
+        },
+        "roc_auc": 0.9993185936933672
+      }
+    },
+    "noisy_label": {
+      "age_rule_baseline": {
+        "false_positive_rate": 0.06004618937644342,
+        "flagged_share": 0.175,
+        "precision": 0.7523809523809524,
+        "recall": 0.47305389221556887
+      },
+      "age_score_baseline": {
+        "n": 600,
+        "positives": 167,
+        "pr_auc": 0.7058630938407833,
+        "recall_at_target_fpr": {
+          "false_positive_rate": 0.04157043879907621,
+          "recall": 0.47305389221556887,
+          "threshold": -10.0
+        },
+        "roc_auc": 0.851467964763314
+      },
+      "calibration": {
+        "bins": [
+          {
+            "bin": 0,
+            "mean_predicted": 0.0478928288985852,
+            "n": 388,
+            "observed_rate": 0.03865979381443299
+          },
+          {
+            "bin": 1,
+            "mean_predicted": 0.12934289244648633,
+            "n": 48,
+            "observed_rate": 0.0625
+          },
+          {
+            "bin": 2,
+            "mean_predicted": 0.24353855351520393,
+            "n": 5,
+            "observed_rate": 0.2
+          },
+          {
+            "bin": 3,
+            "mean_predicted": 0.3344508728742019,
+            "n": 3,
+            "observed_rate": 0.0
+          },
+          {
+            "bin": 5,
+            "mean_predicted": 0.5697200026131567,
+            "n": 3,
+            "observed_rate": 0.6666666666666666
+          },
+          {
+            "bin": 6,
+            "mean_predicted": 0.6648851969484797,
+            "n": 2,
+            "observed_rate": 0.0
+          },
+          {
+            "bin": 7,
+            "mean_predicted": 0.7552643717526032,
+            "n": 4,
+            "observed_rate": 0.75
+          },
+          {
+            "bin": 8,
+            "mean_predicted": 0.8650630532565583,
+            "n": 15,
+            "observed_rate": 0.9333333333333333
+          },
+          {
+            "bin": 9,
+            "mean_predicted": 0.9460154677839652,
+            "n": 132,
+            "observed_rate": 0.9772727272727273
+          }
+        ],
+        "brier": 0.04245369936886572,
+        "ece": 0.024672670271695257
+      },
+      "model": {
+        "n": 600,
+        "positives": 167,
+        "pr_auc": 0.912200562265474,
+        "recall_at_target_fpr": {
+          "false_positive_rate": 0.03002309468822171,
+          "recall": 0.8922155688622755,
+          "threshold": 0.24161323471800294
+        },
+        "roc_auc": 0.9399123231596852
+      }
+    }
+  }
+}

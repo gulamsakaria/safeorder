@@ -1,0 +1,93 @@
+{
+  "calibration": "platt",
+  "feature_columns": [
+    "account_age_days",
+    "orders_7d",
+    "orders_30d",
+    "unique_buyers_24h",
+    "unique_buyers_30d",
+    "buyer_burst_ratio",
+    "repeat_buyer_ratio",
+    "buyer_concentration",
+    "refund_rate",
+    "dispute_rate",
+    "median_cashout_latency_min",
+    "ticket_vs_category_ratio",
+    "shared_buyer_overlap"
+  ],
+  "feature_medians": {
+    "account_age_days": 281.0,
+    "buyer_burst_ratio": 0.8571428571428571,
+    "buyer_concentration": 0.034460767065446804,
+    "dispute_rate": 0.0144927536231884,
+    "median_cashout_latency_min": 2301.0,
+    "orders_30d": 42.0,
+    "orders_7d": 10.0,
+    "refund_rate": 0.01946788619940365,
+    "repeat_buyer_ratio": 0.2682926829268293,
+    "shared_buyer_overlap": 0.0675675675675675,
+    "ticket_vs_category_ratio": 1.1253187613843352,
+    "unique_buyers_24h": 1.0,
+    "unique_buyers_30d": 28.0
+  },
+  "hyperparameters": {
+    "colsample_bytree": 0.8,
+    "early_stopping_rounds": 30,
+    "learning_rate": 0.05,
+    "min_child_samples": 20,
+    "n_estimators": 400,
+    "num_leaves": 15,
+    "reg_lambda": 1.0,
+    "subsample": 0.8,
+    "subsample_freq": 1
+  },
+  "libraries": {
+    "lightgbm": "4.7.0",
+    "numpy": "2.4.6",
+    "pandas": "3.0.6",
+    "scikit-learn": "1.9.1"
+  },
+  "note": "Trained on synthetic data only. Not validated on real data.",
+  "seed": 42,
+  "split": {
+    "calibration": 0.2,
+    "train": 0.6,
+    "validation": 0.2
+  },
+  "trained_at": "2026-10-01",
+  "trained_on": {
+    "files": {
+      "buyers.csv": {
+        "rows": 19997,
+        "sha256": "88b4ced08b64d1f39e673ef079f4bde54e2255ef77eaa5a19f428bd965c14cc3"
+      },
+      "orders.csv": {
+        "rows": 305206,
+        "sha256": "62abdc5058709b2018b4fdfbf2513585368e953f237b602a792ab2423efa3044"
+      },
+      "seller_daily_stats.csv": {
+        "rows": 171804,
+        "sha256": "198a30b99244646891e6dd016c2b42d9ec1699a947ec6e72943e2ff8dd993cb2"
+      },
+      "sellers.csv": {
+        "rows": 3000,
+        "sha256": "bc2580a78b6cc2f9e595b86c8c3524ca6beb9ce941d00ad73f76a929e1e1c150"
+      }
+    },
+    "generator": "v1",
+    "seed": 1001
+  },
+  "training": {
+    "best_iteration": 87,
+    "n_calibration": 600,
+    "n_train": 1800,
+    "n_validation": 600,
+    "platt": {
+      "intercept": -0.029216616219894798,
+      "slope": 0.9541509407536192
+    },
+    "positive_rate_train": 0.2772222222222222,
+    "validation_pr_auc": 0.912200562265474
+  },
+  "version": "trust_v1"
+}

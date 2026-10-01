@@ -75,7 +75,16 @@ def is_limited_history(
 def trust_band(
     score: int, account_age_days: float, order_count: int, cfg: Config | None = None
 ) -> TrustBand:
+    """Band shown to the buyer.
+
+    Limited-history sellers get the neutral band, unless the model score is at or below
+    ``limited_history_override_max_score`` (strong behavioural evidence). Set that value to null
+    in the config for the literal blueprint behaviour.
+    """
     if is_limited_history(account_age_days, order_count, cfg):
+        override = _rules(cfg)["trust"].get("limited_history_override_max_score")
+        if override is not None and score <= override:
+            return TrustBand.HIGH_RISK
         return TrustBand.LIMITED_HISTORY
     return band_for_score(score, cfg)
 

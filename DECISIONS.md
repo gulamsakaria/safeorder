@@ -75,3 +75,41 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
 - v2 = shifted archetype parameters (about +/-20%, listed in `generator.v2.scale`) and a different
   archetype mix.
 - Run the generator from the repository root with `make data` (it sets `PYTHONPATH=backend:.`).
+
+## Step 4
+
+- **Conflict in the blueprint, resolved with a configurable override.** Section 6.2 hides every
+  account younger than 14 days behind the neutral LIMITED_HISTORY band, but Section 12.2
+  (demo 1) wants a new fake seller shown as HIGH_RISK. In the generated data every
+  `fake_burst` seller is younger than 14 days, so the literal rule hides all of them
+  (`reports/trust_eval.json`, policy `blueprint_literal`: fake_burst recall 0). New config value
+  `rules.trust.limited_history_override_max_score` (default 20): a limited-history seller whose model
+  score is at or below it is still shown as HIGH_RISK. Set it to `null` for the literal
+  blueprint rule. The value 20 was fixed before looking at v2 results. **Needs a human decision
+  before the pitch.** The report compares three policies (no limited-history band, literal,
+  override).
+- A limited-history seller's score is hidden in the API (`score: null`, `limited_history: true`)
+  but still stored as `model_score` for trust snapshots and audit.
+- Splits of generator v1: 60% train, 20% validation (early stopping), 20% calibration.
+  Generator v2 is only used for the test numbers; nothing is tuned on it.
+- Calibration is Platt scaling, not isotonic: 600 calibration rows is below the size where
+  isotonic is stable.
+- Metrics are reported against two labels: the dataset label `is_high_risk` (about 4% flipped
+  at random, the realistic one) and the clean archetype label. The clean label is much easier and is
+  a diagnostic only. Baselines: the binary rule "age under 14 days" and a continuous
+  "younger is riskier" score.
+- A new table `seller_features` holds precomputed features so the live Trust Check can run
+  from the database; `make data --load-db` fills it. `refund_count` and `dispute_count` are stored so
+  the feedback loop (Step 10) can update rates after a decision without the order history.
+- `buyer_burst_ratio` follows the blueprint literally: buyers in the last 24 hours divided by the
+  seller's own 30-day daily average (which includes that last day), floored at 1.
+- `shared_buyer_overlap` is 0 for sellers with fewer than 5 distinct buyers
+  (`trust_model.overlap_min_buyers`): a share over one or two buyers is noise.
+- Reasons: 2-4 per response (in practice 4, because the minimum contribution is small).
+  "High"/"low" wording compares a value with the training median. Wording is template-based
+  in `i18n/reasons_en.json` and `reasons_bn.json`. **The Bangla text was drafted by the
+  assistant and must be reviewed by a native speaker.** Fewer than 1% of reasons fall back to
+  the generic sentence.
+- SHAP plots are P1 and not built. The model card is part of Step 14.
+- The trained model (`models/trust_v1.joblib`, about 200 KB) and its metadata are committed so a
+  fresh clone can run the API without training. `make train` rebuilds them.

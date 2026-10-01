@@ -556,12 +556,15 @@ def summarize(data: GeneratedData) -> dict[str, Any]:
     }
 
 
-def load_into_db(data: GeneratedData, engine: Any) -> None:
-    """Load sellers, buyers and daily stats for the demo. Orders and ledger stay in CSV files."""
+def load_into_db(data: GeneratedData, engine: Any, features: pd.DataFrame | None = None) -> None:
+    """Load sellers, buyers, daily stats and (optionally) trust features for the demo.
+
+    Orders and the ledger stay in CSV files.
+    """
     from sqlalchemy import insert
     from sqlmodel import Session
 
-    from app.models import Buyer, Seller, SellerDailyStats
+    from app.models import Buyer, Seller, SellerDailyStats, SellerFeatures
 
     def aware(text: str) -> datetime:
         return datetime.fromisoformat(text).replace(tzinfo=UTC)
@@ -589,6 +592,14 @@ def load_into_db(data: GeneratedData, engine: Any) -> None:
         for start in range(0, len(records), chunk):
             session.execute(insert(SellerDailyStats), records[start : start + chunk])
         session.commit()
+        if features is not None:
+            as_of = aware(data.params["as_of"])
+            feature_rows = features.reset_index().rename(columns={"index": "seller_id"})
+            feature_rows = feature_rows.astype(object).where(feature_rows.notna(), None)
+            session.add_all(
+                SellerFeatures(as_of=as_of, **row) for row in feature_rows.to_dict("records")
+            )
+            session.commit()
 
 
 def write_assumptions_doc(path: Path, reports_dir: Path) -> None:
@@ -689,8 +700,14 @@ def main() -> None:
             engine = make_engine()
             create_db(engine)
             reset_db(engine)
-            load_into_db(data, engine)
-            print("loaded v1 sellers, buyers and daily stats into the demo database")
+            from app.trust.features import compute_features
+
+            features = compute_features(
+                data.sellers, data.orders, data.daily_stats, data.params["categories"],
+                data.params["as_of"], cfg,
+            )  # fmt: skip
+            load_into_db(data, engine, features)
+            print("loaded v1 sellers, buyers, daily stats and trust features into the demo DB")
     write_assumptions_doc(
         REPO_ROOT / cfg["paths"]["docs_dir"] / "synthetic_assumptions.md", reports
     )

@@ -27,6 +27,11 @@ rules:
     limited_history_max_age_days: 14
     limited_history_min_orders: 10
     high_risk_requires_confirmation: true
+    # Blueprint 6.2 hides every account younger than 14 days behind LIMITED_HISTORY, but every
+    # simulated fake seller is that young, so the demo would never show HIGH_RISK (see DECISIONS.md).
+    # A model score at or below this value still shows HIGH_RISK for limited-history sellers.
+    # null = literal blueprint behaviour (never override).
+    limited_history_override_max_score: 20
   routing:
     min_class_probability: 0.80
     high_amount_bdt: 5000
@@ -172,3 +177,25 @@ generator:
       slow_scammer.spike_order_multiplier: 0.8
       collusive_ring.ring_share: 0.9
       chronic_poor_service.dispute_rate: 1.2
+
+# Seller trust model (BLUEPRINT.md Section 9.1)
+trust_model:
+  version: trust_v1
+  seed: 42
+  split: {train: 0.6, validation: 0.2, calibration: 0.2}   # of generator v1; v2 is the test set
+  lightgbm:
+    n_estimators: 400
+    learning_rate: 0.05
+    num_leaves: 15
+    min_child_samples: 20
+    subsample: 0.8
+    subsample_freq: 1
+    colsample_bytree: 0.8
+    reg_lambda: 1.0
+    early_stopping_rounds: 30
+  calibration: platt             # Platt scaling: the calibration split is too small for isotonic
+  burst_ratio_floor: 1.0         # minimum daily average used as the burst-ratio denominator
+  overlap_min_buyers: 5          # fewer buyers than this: shared_buyer_overlap is not meaningful
+  reasons: {min: 2, max: 4, min_abs_contribution: 0.05}
+  latency_budget_ms: 50
+  eval: {target_fpr: 0.05, calibration_bins: 10, latency_samples: 300}

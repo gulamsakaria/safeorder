@@ -172,3 +172,33 @@ class AuditLog(SQLModel, table=True):
     entity_id: str
     payload_json: str = "{}"
     created_at: datetime
+
+
+class SellerFeatures(SQLModel, table=True):
+    """Precomputed trust features per seller (an addition to the Section 5 tables).
+
+    The simulated orders live in CSV files, not in the database, so the live Trust Check reads
+    its inputs from here. ``refund_count`` and ``dispute_count`` let the feedback loop update the
+    rates after an analyst decision without the order history.
+    """
+
+    __tablename__ = "seller_features"
+
+    seller_id: str = Field(foreign_key="seller.id", primary_key=True)
+    as_of: datetime
+    account_age_days: float
+    orders_7d: float
+    orders_30d: float
+    unique_buyers_24h: float
+    unique_buyers_30d: float
+    buyer_burst_ratio: float
+    repeat_buyer_ratio: float
+    buyer_concentration: float
+    refund_rate: float
+    dispute_rate: float
+    median_cashout_latency_min: float | None = None
+    ticket_vs_category_ratio: float | None = None
+    shared_buyer_overlap: float
+    orders_total: int
+    refund_count: int
+    dispute_count: int

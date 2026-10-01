@@ -151,6 +151,6 @@ def test_all_blueprint_tables_exist(engine) -> None:
     expected = {
         "seller", "buyer", "seller_daily_stats", "orders", "ledger_entry", "courier_event",
         "dispute", "evidence_item", "analysis_result", "analyst_decision", "trust_snapshot",
-        "audit_log",
+        "audit_log", "seller_features",
     }  # fmt: skip
     assert set(inspect(engine).get_table_names()) == expected

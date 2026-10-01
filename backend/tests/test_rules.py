@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from app import rules
+from app.config import load_config
 from app.enums import OrderStatus, TrustBand
 
 T0 = datetime(2026, 10, 1, 9, 0, tzinfo=UTC)
@@ -51,9 +52,17 @@ def test_limited_history(age_days: float, orders: int, limited: bool) -> None:
     assert rules.is_limited_history(age_days, orders) is limited
 
 
-def test_trust_band_prefers_limited_history_over_a_low_score() -> None:
-    assert rules.trust_band(5, account_age_days=3, order_count=2) == TrustBand.LIMITED_HISTORY
+def test_limited_history_hides_a_weak_signal_but_not_a_strong_one() -> None:
+    assert rules.trust_band(30, account_age_days=3, order_count=2) == TrustBand.LIMITED_HISTORY
+    assert rules.trust_band(21, account_age_days=3, order_count=2) == TrustBand.LIMITED_HISTORY
+    assert rules.trust_band(20, account_age_days=3, order_count=2) == TrustBand.HIGH_RISK
     assert rules.trust_band(5, account_age_days=300, order_count=80) == TrustBand.HIGH_RISK
+
+
+def test_override_can_be_switched_off_for_the_literal_blueprint_rule() -> None:
+    cfg = {"rules": {"trust": {**load_config()["rules"]["trust"],
+                               "limited_history_override_max_score": None}}}  # fmt: skip
+    assert rules.trust_band(5, 3, 2, cfg) == TrustBand.LIMITED_HISTORY
 
 
 def test_only_high_risk_needs_extra_confirmation() -> None:
