@@ -40,3 +40,135 @@ dispute:
 api:
   base_path: /api
   cors_origins: ["http://localhost:5173"]
+
+# Synthetic seller generator (BLUEPRINT.md Section 8.2). Every number here is an assumption,
+# not an observation of any real market. Ranges are [low, high].
+generator:
+  as_of: "2026-10-01T00:00:00"        # scoring moment; all orders happen before it
+  n_sellers: 3000
+  stats_window_days: [60, 90]          # days of daily stats per seller (or the account age)
+  label_noise: 0.04                    # share of sellers whose is_high_risk label is flipped
+  buyer_pool_size: 20000
+  buyer_age_days: [30, 700]
+  loyal_orders_per_buyer: 3            # average orders per returning buyer (shapes repeat_buyer_ratio)
+  ticket_sigma: 0.3                    # spread of order amounts around the seller's typical ticket
+  min_amount_bdt: 100
+  amount_round_to: 10
+  max_cashout_latency_min: 20160       # 14 days
+  seeds:
+    v1: 1001
+    v2: 2002
+  categories:                          # median order amount in BDT (assumption)
+    clothing: 1200
+    cosmetics: 700
+    electronics: 4500
+    household: 900
+    food: 450
+    shoes: 1800
+    books: 400
+    accessories: 600
+  weekday_factors: [1.0, 1.0, 1.0, 1.05, 0.8, 0.85, 1.1]   # Monday..Sunday
+  hour_weights: [1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 6, 6, 6, 6, 6, 6, 7, 8, 9, 9, 8, 6, 4, 2]
+  festival:                            # a synthetic spike, not tied to a real calendar date
+    start: "2026-09-10"
+    end: "2026-09-17"
+    multiplier: 1.6
+  shares:
+    honest_established: 0.55
+    honest_new: 0.15
+    fake_burst: 0.12
+    slow_scammer: 0.08
+    collusive_ring: 0.05
+    chronic_poor_service: 0.05
+  archetypes:
+    honest_established:
+      age_days: [180, 900]
+      orders_per_day: [0.4, 4.0]
+      repeat_buyer_ratio: [0.25, 0.6]
+      ticket_ratio: [0.7, 1.3]
+      refund_rate: [0.01, 0.04]
+      dispute_rate: [0.005, 0.02]
+      cashout_median_min: [1500, 6000]
+      cashout_sigma: 0.8
+    honest_new:
+      age_days: [3, 45]
+      orders_per_day: [0.2, 2.0]
+      repeat_buyer_ratio: [0.0, 0.15]
+      ticket_ratio: [0.6, 1.4]
+      refund_rate: [0.005, 0.03]
+      dispute_rate: [0.0, 0.02]
+      cashout_median_min: [1200, 5000]
+      cashout_sigma: 0.9
+      fast_cashout_prob: 0.12          # overlap with scammers: some honest new sellers cash out fast
+      fast_cashout_median_min: [10, 60]
+    fake_burst:
+      age_days: [1, 10]
+      burst_hours: [24, 72]
+      burst_buyers: [20, 120]
+      pre_burst_orders: [0, 3]
+      ticket_ratio: [1.5, 3.0]
+      refund_rate: [0.0, 0.02]
+      dispute_rate: [0.02, 0.12]
+      cashout_median_min: [3, 30]
+      cashout_sigma: 0.6
+      mild_prob: 0.2                   # overlap with honest sellers: a milder, harder-to-spot burst
+      mild_burst_buyers: [10, 30]
+      mild_ticket_ratio: [1.0, 1.5]
+      mild_cashout_median_min: [60, 400]
+    slow_scammer:
+      honest_days: [30, 90]
+      spike_days: [3, 7]
+      silence_days: [0, 2]
+      honest_orders_per_day: [0.4, 3.0]
+      repeat_buyer_ratio: [0.1, 0.4]
+      honest_ticket_ratio: [0.7, 1.3]
+      honest_refund_rate: [0.01, 0.04]
+      honest_dispute_rate: [0.005, 0.02]
+      honest_cashout_median_min: [1500, 6000]
+      spike_order_multiplier: [6, 15]
+      spike_ticket_ratio: [2.0, 4.0]
+      spike_refund_rate: [0.05, 0.15]
+      spike_dispute_rate: [0.1, 0.3]
+      spike_cashout_median_min: [10, 120]
+      cashout_sigma: 0.8
+      mild_prob: 0.2
+      mild_spike_order_multiplier: [2, 4]
+    collusive_ring:
+      age_days: [20, 120]
+      ring_size: [3, 6]
+      ring_pool_buyers: [6, 14]
+      ring_share: [0.85, 0.95]
+      orders_per_day: [1.0, 4.0]
+      ticket_ratio: [1.0, 1.6]
+      refund_rate: [0.0, 0.02]
+      dispute_rate: [0.0, 0.02]
+      cashout_median_min: [120, 900]
+      cashout_sigma: 0.7
+    chronic_poor_service:              # hard negative: unreliable but not fraudulent
+      age_days: [90, 600]
+      orders_per_day: [0.8, 4.0]
+      repeat_buyer_ratio: [0.15, 0.4]
+      ticket_ratio: [0.7, 1.3]
+      refund_rate: [0.08, 0.18]
+      dispute_rate: [0.10, 0.25]
+      cashout_median_min: [1500, 6000]
+      cashout_sigma: 0.8
+  v2:                                  # shifted test generator: roughly 20% parameter shifts
+    shares:
+      honest_established: 0.50
+      honest_new: 0.20
+      fake_burst: 0.10
+      slow_scammer: 0.08
+      collusive_ring: 0.05
+      chronic_poor_service: 0.07
+    scale:                             # dotted path under `archetypes` -> multiplier
+      fake_burst.burst_buyers: 0.8
+      fake_burst.ticket_ratio: 0.8
+      fake_burst.cashout_median_min: 1.2
+      fake_burst.mild_prob: 1.25
+      honest_new.fast_cashout_prob: 1.25
+      honest_new.orders_per_day: 1.2
+      honest_established.orders_per_day: 0.8
+      slow_scammer.spike_order_multiplier: 0.8
+      collusive_ring.ring_share: 0.9
+      chronic_poor_service.dispute_rate: 1.2

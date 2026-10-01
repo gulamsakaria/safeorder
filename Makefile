@@ -21,7 +21,7 @@ web:
 	cd frontend && npm run dev
 
 data:
-	@echo "not implemented yet (Steps 3 and 5)"
+	PYTHONPATH=backend:. $(PY) -m scripts.generate_sellers --version both --load-db
 
 train:
 	@echo "not implemented yet (Steps 4 and 6)"

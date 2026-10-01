@@ -50,3 +50,28 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
   can be later than `hold_until`.
 - `rules.py` holds fairness and band logic; dispute routing (Section 6.2) is added with the router
   in Step 7. Functions flush but never commit; callers own the transaction.
+
+## Step 3
+
+- Generator output per version (`data/synthetic/v1|v2/`, not committed): `sellers.csv`,
+  `buyers.csv`, `orders.csv`, `seller_daily_stats.csv` and a `manifest.json` with row counts and
+  SHA-256 hashes. The same seed reproduces identical hashes (checked on the full 3,000-seller run).
+- `orders.csv` has a `cashout_latency_min` column that the database `orders` table does not have.
+  The trust feature `median_cashout_latency_min` (Step 4) needs it. Only sellers, buyers and
+  daily stats are loaded into the demo database (`--load-db`); orders stay in CSV files.
+  **Open point for Step 4:** live Trust Check for database sellers needs precomputed features
+  (a `seller_features` table or file built from the CSVs), because the orders are not in the DB.
+- `repeat_buyer_ratio` in the config is the target share of a seller's buyers with 2+ orders.
+  A first version controlled the share of orders instead and gave 17% for established sellers
+  (blueprint: 25-60%); it now gives about 36%. Realised values are in `docs/synthetic_assumptions.md`.
+- Stats window: 60-90 days, capped by account age. The average is below 60 because young
+  accounts (honest_new, fake_burst) have only a few days of history.
+- Collusive rings: 3-6 sellers share a pool of 6-14 buyer accounts (`ring_id`, hidden ground
+  truth). "Circular flows" are not modelled beyond the shared buyer pool.
+- Overlaps added so the task is not trivially separable: 12% of honest_new sellers cash out
+  fast, 20% of fake_burst and slow_scammer sellers are "mild" (smaller bursts or spikes).
+- The festival spike (10-17 Sep 2026), weekday factors and hourly profile are invented.
+- Label noise flips `is_high_risk` for about 4% of sellers at random (hidden `label_noised`).
+- v2 = shifted archetype parameters (about +/-20%, listed in `generator.v2.scale`) and a different
+  archetype mix.
+- Run the generator from the repository root with `make data` (it sets `PYTHONPATH=backend:.`).

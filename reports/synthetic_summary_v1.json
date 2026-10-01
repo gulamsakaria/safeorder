@@ -1,0 +1,87 @@
+{
+  "high_risk_share": 0.2773,
+  "label_noise_realised": 0.0467,
+  "n_orders": 305206,
+  "n_sellers": 3000,
+  "per_archetype": {
+    "chronic_poor_service": {
+      "age": 352.047,
+      "dispute_rate": 0.176,
+      "mean_ticket_ratio": 1.062,
+      "median_cashout_min": 3298.417,
+      "orders": 156.26,
+      "refund_rate": 0.13,
+      "repeat_buyer_ratio": 0.229,
+      "sellers": 150,
+      "share": 0.05,
+      "unique_buyers": 99.6,
+      "unique_buyers_24h": 1.933
+    },
+    "collusive_ring": {
+      "age": 70.533,
+      "dispute_rate": 0.009,
+      "mean_ticket_ratio": 1.34,
+      "median_cashout_min": 377.557,
+      "orders": 138.367,
+      "refund_rate": 0.009,
+      "repeat_buyer_ratio": 0.462,
+      "sellers": 150,
+      "share": 0.05,
+      "unique_buyers": 23.767,
+      "unique_buyers_24h": 1.893
+    },
+    "fake_burst": {
+      "age": 5.267,
+      "dispute_rate": 0.072,
+      "mean_ticket_ratio": 2.14,
+      "median_cashout_min": 50.458,
+      "orders": 64.625,
+      "refund_rate": 0.009,
+      "repeat_buyer_ratio": 0.041,
+      "sellers": 360,
+      "share": 0.12,
+      "unique_buyers": 61.958,
+      "unique_buyers_24h": 37.353
+    },
+    "honest_established": {
+      "age": 538.79,
+      "dispute_rate": 0.013,
+      "mean_ticket_ratio": 1.043,
+      "median_cashout_min": 3230.138,
+      "orders": 119.849,
+      "refund_rate": 0.026,
+      "repeat_buyer_ratio": 0.355,
+      "sellers": 1650,
+      "share": 0.55,
+      "unique_buyers": 64.016,
+      "unique_buyers_24h": 1.519
+    },
+    "honest_new": {
+      "age": 24.993,
+      "dispute_rate": 0.012,
+      "mean_ticket_ratio": 1.023,
+      "median_cashout_min": 2451.637,
+      "orders": 21.796,
+      "refund_rate": 0.017,
+      "repeat_buyer_ratio": 0.06,
+      "sellers": 450,
+      "share": 0.15,
+      "unique_buyers": 18.951,
+      "unique_buyers_24h": 0.722
+    },
+    "slow_scammer": {
+      "age": 66.829,
+      "dispute_rate": 0.093,
+      "mean_ticket_ratio": 1.897,
+      "median_cashout_min": 1246.265,
+      "orders": 125.783,
+      "refund_rate": 0.056,
+      "repeat_buyer_ratio": 0.207,
+      "sellers": 240,
+      "share": 0.08,
+      "unique_buyers": 84.854,
+      "unique_buyers_24h": 3.538
+    }
+  },
+  "version": "v1"
+}
