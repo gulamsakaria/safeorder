@@ -9,3 +9,4 @@ data/synthetic/*
 !data/synthetic/.gitkeep
 node_modules/
 frontend/dist/
+build/

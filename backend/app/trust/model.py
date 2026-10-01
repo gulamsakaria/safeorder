@@ -4,6 +4,7 @@ The model only estimates P(high risk). The score, the band and the warning rules
 ``app/rules.py``. Reasons come from LightGBM's own per-feature contributions.
 """
 
+import inspect
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -179,6 +180,17 @@ def split_indices(
     return {"train": train, "validation": valid, "calibration": calib}
 
 
+def eval_kwargs(fit: Any, x: Any, y: Any) -> dict[str, Any]:
+    """Validation-set arguments for ``LGBMClassifier.fit`` across LightGBM versions.
+
+    Newer releases take ``eval_X`` and ``eval_y`` and deprecate ``eval_set``; older ones (for
+    example on Kaggle) only know ``eval_set``.
+    """
+    if "eval_X" in inspect.signature(fit).parameters:
+        return {"eval_X": x, "eval_y": y}
+    return {"eval_set": [(x, y)]}
+
+
 def train_model(
     features: pd.DataFrame, labels: pd.Series, cfg: dict[str, Any] | None = None
 ) -> tuple[TrustModel, dict[str, Any]]:
@@ -206,7 +218,7 @@ def train_model(
     )
     classifier.fit(
         x.iloc[parts["train"]], y[parts["train"]],
-        eval_X=x.iloc[parts["validation"]], eval_y=y[parts["validation"]],
+        **eval_kwargs(classifier.fit, x.iloc[parts["validation"]], y[parts["validation"]]),
         eval_metric="binary_logloss",
         callbacks=[lgb.early_stopping(early_stopping, verbose=False)],
     )  # fmt: skip

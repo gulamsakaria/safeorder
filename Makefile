@@ -1,6 +1,6 @@
 PY := .venv/bin/python
 
-.PHONY: setup data train api web test lint eval demo-reset openapi
+.PHONY: setup data train api web test lint eval demo-reset openapi kaggle
 
 setup:
 	python3.11 -m venv .venv
@@ -31,6 +31,9 @@ eval:
 
 openapi:
 	PYTHONPATH=backend:. $(PY) -m scripts.export_openapi
+
+kaggle:
+	PYTHONPATH=backend:. $(PY) -m scripts.build_kaggle
 
 demo-reset:
 	@echo "not implemented yet (Step 11)"

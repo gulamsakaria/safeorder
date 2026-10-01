@@ -342,3 +342,16 @@ def test_unknown_monotone_feature_is_rejected(trained) -> None:
     }
     with pytest.raises(ValueError):
         train_model(features, sellers.loc[features.index, "is_high_risk"], cfg)
+
+
+def test_validation_arguments_fit_old_and_new_lightgbm() -> None:
+    from app.trust.model import eval_kwargs
+
+    def new_fit(X, y, *, eval_X=None, eval_y=None):  # noqa: N803  (mirrors LightGBM's names)
+        return None
+
+    def old_fit(X, y, *, eval_set=None):  # noqa: N803
+        return None
+
+    assert eval_kwargs(new_fit, "x", "y") == {"eval_X": "x", "eval_y": "y"}
+    assert eval_kwargs(old_fit, "x", "y") == {"eval_set": [("x", "y")]}
