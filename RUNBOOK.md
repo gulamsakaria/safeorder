@@ -4,9 +4,10 @@ Short operating notes. Grows as steps are completed (final version in Step 15).
 
 ## Start the app
 
-1. `make setup` (once)
-2. `make api` in one terminal, `make web` in another
+1. `make setup` (once), then `make data && make train` to create the demo data and the model
+2. `make api` in one terminal, `make web` in another (or `make web-mock` for a UI with no backend)
 3. Open http://localhost:5173. The Sandbox banner must always be visible.
+4. Reset the demo at any time on the `/demo` page or with `POST /api/demo/reset`.
 
 ## Checks before a commit
 
@@ -47,3 +48,9 @@ kaggle kernels push -p kaggle/notebook    # runs the notebook on Kaggle (private
 
 Both items are private by default. If the notebook fails right after a dataset update, it may
 have started before the new dataset version was ready: push it again.
+
+## Frontend notes
+
+- `VITE_USE_MOCK=true|false` (see `frontend/.env.example`) is the only switch between the mock and the real API.
+- The mock keeps its state in the browser tab (`sessionStorage`), so a refresh does not wipe it.
+- After a backend contract change: `make gen-api`, then `make test-web`. A test fails if the generated types are stale.

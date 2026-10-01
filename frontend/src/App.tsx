@@ -1,31 +1,36 @@
-import { useState } from 'react'
-import { type Lang, strings } from './i18n'
+import { Link, Route, Routes } from 'react-router-dom'
+import { Layout } from './components/Layout'
+import { Card } from './components/ui'
+import { useI18n } from './i18n/useI18n'
+import { DemoPage } from './pages/DemoPage'
+import { DisputePage } from './pages/DisputePage'
+import { OrderPage } from './pages/OrderPage'
+import { ReportProblemPage } from './pages/ReportProblemPage'
+import { TrustCheckPage } from './pages/TrustCheckPage'
+
+function NotFound() {
+  const { t } = useI18n()
+  return (
+    <Card tone="warn">
+      <p className="mb-3">{t('common.error.NOT_FOUND')}</p>
+      <Link className="font-semibold text-blue-800 underline" to="/">
+        {t('common.back')}
+      </Link>
+    </Card>
+  )
+}
 
 export default function App() {
-  const [lang, setLang] = useState<Lang>('bn')
-  const t = strings[lang]
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div
-        role="status"
-        className="sticky top-0 z-10 bg-amber-400 px-4 py-2 text-center text-sm font-semibold"
-      >
-        {t.banner}
-      </div>
-      <header className="mx-auto flex max-w-3xl items-center justify-between px-4 py-6">
-        <div>
-          <h1 className="text-2xl font-bold">{t.title}</h1>
-          <p className="text-slate-600">{t.subtitle}</p>
-        </div>
-        <button
-          type="button"
-          className="min-h-11 rounded-lg border border-slate-300 px-4"
-          onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')}
-        >
-          {t.toggle}
-        </button>
-      </header>
-    </div>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<TrustCheckPage />} />
+        <Route path="order/:id" element={<OrderPage />} />
+        <Route path="order/:id/report" element={<ReportProblemPage />} />
+        <Route path="dispute/:id" element={<DisputePage />} />
+        <Route path="demo" element={<DemoPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
   )
 }

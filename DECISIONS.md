@@ -225,3 +225,40 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
   the installed version (`eval_kwargs`, with a test). The trained model is unchanged.
 - The retrained unconstrained twin in the notebook shows 760 sellers whose score rises after one
   extra refund and dispute (769 in the first measurement); both are about a quarter of the sellers.
+
+## Step 9
+
+- **Contract change:** added `GET /api/disputes/{id}` (claim, evidence, deadline, status; no analysis
+  or analyst notes). The seller screen needs the claim and the response deadline, and using the
+  analyst endpoint would have exposed the analysis. The OpenAPI file now declares the real error
+  format (`ErrorOut`) for 400/404/409/422/503; before, it advertised the framework's default 422 body.
+- **TypeScript 5.9** instead of the template's 6.x, because `openapi-typescript` still needs
+  TypeScript 5 as a peer dependency. The alternative was forcing the install past the warning.
+- **Generated client:** `frontend/src/api/schema.ts` comes from `docs/openapi.json`
+  (`make gen-api`) and is committed. Screens call the API through `openapi-fetch`. A test fails
+  when the generated types are older than the OpenAPI file.
+- **One switch:** `VITE_USE_MOCK=true|false`. Real mode uses `VITE_API_BASE_URL` (default
+  `http://localhost:8000`). The buyer for new orders is `VITE_DEMO_BUYER_ID` (default `B-000001`),
+  because the sandbox has no sign-in. The same applies to the buyer/seller switch on the dispute page.
+- **Mock server (MSW):** it implements the 12 endpoints the four screens and the demo page use. It is
+  typed with the generated types, keeps its state in the tab's `sessionStorage`, and mimics the
+  hold timer, the 48-hour response deadline and the dispatch deadline. Analyst endpoints are not
+  mocked; they come with the analyst console (Step 10).
+- **Bugs found while testing and fixed:**
+  1. `useAction` kept the first render's function, so a form submitted values from before the user typed
+     (an order with no amount, a dispute with no text). It now calls the latest function.
+  2. The API client captured `fetch` when it was created, which bypassed a mock installed later.
+  3. The mock lost all state on a page refresh.
+- Countdowns use the **server's simulated clock** (`server_time` sent with every order), so a
+  fast-forwarded demo clock is respected. A new server time re-anchors the estimate; drift is at most
+  one second.
+- The sandbox delivery code is shown once and kept in the tab's `sessionStorage` so a refresh does not
+  lose it. Photo upload is a disabled placeholder; evidence is described in text.
+- A minimal `/demo` page exists already (courier events, move the clock, reset) because the
+  screens cannot be exercised without it. Step 11 adds scenario loading.
+- Verified in real Chromium at a 390 px phone width: against the real API with the generated
+  3,000 sellers, and in mock mode with the backend switched off, through the same path (trust check,
+  order, wrong and right code, fast-forward release, lost parcel, dispute, seller response, language
+  toggle). No browser errors. Google Fonts could not be loaded in this sandbox, so the Noto Sans
+  Bengali webfont itself was not seen; the system fallback rendered Bangla correctly.
+- **The Bangla interface text was drafted by the assistant and needs review by a native speaker.**

@@ -672,13 +672,24 @@ def test_openapi_file_is_up_to_date_and_hides_ground_truth() -> None:
     assert "/api/trust/check" in written["paths"] and "/api/analyst/queue" in written["paths"]
 
 
+def test_openapi_declares_the_real_error_format() -> None:
+    paths = default_app.openapi()["paths"]
+    for method, path in (("post", "/api/orders"), ("get", "/api/disputes/{dispute_id}")):
+        responses = paths[path][method]["responses"]
+        for code in ("404", "409", "422"):
+            ref = responses[code]["content"]["application/json"]["schema"]["$ref"]
+            assert ref.endswith("/ErrorOut"), (path, code, ref)
+    assert "HTTPValidationError" not in json.dumps(paths)
+
+
 def test_every_blueprint_endpoint_exists() -> None:
     paths = default_app.openapi()["paths"]
     expected = {
         ("get", "/health"), ("post", "/api/trust/check"), ("post", "/api/orders"),
         ("get", "/api/orders/{order_id}"), ("post", "/api/orders/{order_id}/confirm-delivery"),
         ("post", "/api/sim/courier-event"), ("post", "/api/sim/advance-clock"),
-        ("post", "/api/disputes"), ("post", "/api/disputes/{dispute_id}/seller-response"),
+        ("post", "/api/disputes"), ("get", "/api/disputes/{dispute_id}"),
+        ("post", "/api/disputes/{dispute_id}/seller-response"),
         ("post", "/api/disputes/{dispute_id}/analyze"), ("get", "/api/analyst/queue"),
         ("get", "/api/analyst/disputes/{dispute_id}"),
         ("post", "/api/analyst/disputes/{dispute_id}/decision"),

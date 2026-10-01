@@ -15,7 +15,16 @@ from app.api import analyst, demo, disputes, metrics, orders, sim, trust
 from app.api.errors import install_error_handlers
 from app.config import load_config
 from app.disputes.classifier import DisputeClassifier
+from app.schemas import ErrorOut
 from app.trust.model import TrustModel
+
+ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
+    400: {"model": ErrorOut, "description": "Bad request, for example a wrong delivery code"},
+    404: {"model": ErrorOut, "description": "Not found"},
+    409: {"model": ErrorOut, "description": "Not allowed in the current state"},
+    422: {"model": ErrorOut, "description": "Validation error"},
+    503: {"model": ErrorOut, "description": "A model is not available"},
+}
 
 
 def create_app(
@@ -45,7 +54,7 @@ def create_app(
 
     prefix = config["api"]["base_path"]
     for module in (trust, orders, sim, disputes, analyst, metrics, demo):
-        app.include_router(module.router, prefix=prefix)
+        app.include_router(module.router, prefix=prefix, responses=ERROR_RESPONSES)
     return app
 
 

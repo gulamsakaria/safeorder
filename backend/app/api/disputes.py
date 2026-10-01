@@ -47,6 +47,16 @@ def _add_evidence(session: Session, dispute_id: str, party: Party, text: str) ->
         )
 
 
+@router.get("/disputes/{dispute_id}", response_model=DisputeOut)
+def get_dispute(dispute_id: str, session: Session = Depends(get_session)) -> dict[str, Any]:
+    """The dispute as both parties see it: claim, evidence, deadline and status.
+
+    An addition to the contract. It carries no analysis and no analyst notes; the seller screen
+    needs it to show the claim and the response deadline.
+    """
+    return common.dispute_out(session, _get_dispute(session, dispute_id))
+
+
 @router.post("/disputes", response_model=DisputeOut, status_code=201)
 def create_dispute(
     body: CreateDisputeRequest,

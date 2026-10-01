@@ -1,6 +1,6 @@
 PY := .venv/bin/python
 
-.PHONY: setup data train api web test lint eval demo-reset openapi kaggle
+.PHONY: setup data train api web web-mock test test-web lint eval demo-reset openapi kaggle gen-api
 
 setup:
 	python3.11 -m venv .venv
@@ -18,7 +18,16 @@ api:
 	cd backend && ../$(PY) -m uvicorn app.main:app --reload --port 8000
 
 web:
-	cd frontend && npm run dev
+	cd frontend && VITE_USE_MOCK=false npm run dev
+
+web-mock:
+	cd frontend && npm run dev:mock
+
+test-web:
+	cd frontend && npm run typecheck && npm test && npm run lint && npm run build
+
+gen-api: openapi
+	cd frontend && npm run gen:api
 
 data:
 	PYTHONPATH=backend:. $(PY) -m scripts.generate_sellers --version both --load-db

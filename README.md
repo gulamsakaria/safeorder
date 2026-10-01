@@ -12,9 +12,11 @@ Requirements: Python 3.11, Node 20+.
 
 ```bash
 make setup     # Python venv + dependencies, frontend npm install
-make test      # pytest + ruff
+make test      # pytest + ruff (backend)
+make test-web  # typecheck, vitest, lint and build (frontend)
 make api       # FastAPI on http://localhost:8000  (GET /health)
-make web       # Vite dev server on http://localhost:5173
+make web       # Vite dev server on http://localhost:5173, talks to the real API
+make web-mock  # same UI with an in-browser mock server (no backend needed)
 ```
 
 `make data`, `make train`, `make eval` and `make demo-reset` are placeholders until Steps 3-12.
