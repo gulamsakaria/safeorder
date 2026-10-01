@@ -199,3 +199,13 @@ trust_model:
   reasons: {min: 2, max: 4, min_abs_contribution: 0.05}
   latency_budget_ms: 50
   eval: {target_fpr: 0.05, calibration_bins: 10, latency_samples: 300}
+
+# Evidence analyzer (BLUEPRINT.md Section 9.3). Routing thresholds live under rules.routing.
+analyzer:
+  rules_version: rules_v1
+  min_evidence_chars: 15
+  min_evidence_words: 3
+  late_report_hours: 48            # a dispute filed this long after delivery is flagged LATE_REPORT
+  amount_tolerance: 0.01
+  amount_bands_bdt: [1000, 2000, 5000, 10000]
+  proof_keywords: [tracking, track, receipt, memo, consignment, booking, "ট্র্যাকিং", "রসিদ", "মেমো", "কনসাইনমেন্ট", "বুকিং", "ট্র্যাক"]

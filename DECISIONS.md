@@ -113,3 +113,47 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
 - SHAP plots are P1 and not built. The model card is part of Step 14.
 - The trained model (`models/trust_v1.joblib`, about 200 KB) and its metadata are committed so a
   fresh clone can run the API without training. `make train` rebuilds them.
+
+## Step 7 (done before Steps 5 and 6, see below)
+
+- **Order change:** Step 7 was built before Steps 5 and 6 because the dispute cases (ChatGPT /
+  Gemini output) are not available yet. Everything that does not need a trained classifier is
+  done: injection screen, consistency checks, timeline, router, explanation templates and the
+  `analyze` pipeline. Steps 5 and 6 are still open.
+- **No stand-in classifier.** `app/disputes/classifier.py` only defines the interface
+  (`predict_proba(text) -> 4 probabilities`, `version`). `load_classifier()` raises
+  `ClassifierNotAvailable` until Step 6 trains the real model, so no screen can show invented
+  probabilities. Tests use a `FixedClassifier` test double with fixed numbers.
+- `app/disputes/text_format.py` (a Step 6 file) was written now because the analyzer builds the
+  classifier input with it.
+- **Database additions** on `dispute`: `claim_type` (optional, chosen on the buyer form),
+  `seller_response_text`, `seller_responded_at`. Step 8 stores them; Step 9's form should send
+  `claim_type`. If it is missing, a keyword fallback (English, Bangla, Banglish) detects a
+  "not received" claim. It is a heuristic and misses unusual wording.
+- **Injection screen.** Instruction-like sentences are removed before the classifier and the
+  consistency checks see the text, then the case is forced to human review (`injection_detected`,
+  flag `INJECTION_DETECTED`, route reason `INJECTION_DETECTED`). Only pattern codes are stored,
+  never the injected text. It is a screen, not a guarantee: obfuscated wording can slip through, and
+  an ordinary sentence can be caught by mistake (that only costs a human review). Complaints such as
+  "the seller did not approve my return" are deliberately not flagged. The structural protection
+  is that no free text can change a label, a route or a ledger entry.
+- **Judgement calls in the consistency rules** (the blueprint gives names, not definitions), all
+  configurable in `analyzer`:
+  - `NO_COURIER_PROOF`: no dispatch record from the courier and no proof word (tracking, receipt,
+    memo, ...) in the seller's text. This also fires for real seller-fault cases (never
+    dispatched), so those always go to a human. The fast lane is therefore narrow by design.
+  - `EVIDENCE_EMPTY_OR_VAGUE`: fewer than 15 characters or 3 words. The seller side is checked only
+    after the seller has responded.
+  - `AMOUNT_MISMATCH`: flagged when amounts are written next to a currency word or sign and none
+    equals the order amount (1% tolerance). A text that mentions only the delivery charge is flagged.
+  - `LATE_REPORT`: filed more than 48 hours after delivery (assumption).
+  - `REPEAT_CLAIMANT` is covered by the `FLAGS_PRESENT` route reason, as in the blueprint example.
+- Route reasons come in a fixed order: insufficient-evidence class, flags, injection, low
+  confidence, high amount. A low-confidence case still gets the recommendation of its top class;
+  the route sends it to a human.
+- The response has one extra field, `explanation_sections` (what happened / why it is risky /
+  what upay should do next, per language). **The Bangla templates were drafted by the assistant
+  and need review by a native speaker.**
+- **Bug found and fixed in Step 2 code:** audit-log rows ignored the `now` passed to an event and
+  used the clock instead, so the delivery-code confirmation could land in the wrong place on the
+  timeline. Audit rows now carry the event's own time (regression test added).

@@ -3,6 +3,7 @@
 import re
 from collections.abc import Iterator
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 
 from sqlalchemy import Engine, event, text
@@ -70,7 +71,13 @@ def next_id(session: Session, model: type[SQLModel], prefix: str, width: int = 4
 
 
 def write_audit(
-    session: Session, actor: str, action: str, entity: str, entity_id: str, payload_json: str = "{}"
+    session: Session,
+    actor: str,
+    action: str,
+    entity: str,
+    entity_id: str,
+    payload_json: str = "{}",
+    created_at: datetime | None = None,
 ) -> None:
     session.add(
         models.AuditLog(
@@ -79,6 +86,6 @@ def write_audit(
             entity=entity,
             entity_id=entity_id,
             payload_json=payload_json,
-            created_at=clock.now(),
+            created_at=created_at or clock.now(),
         )
     )

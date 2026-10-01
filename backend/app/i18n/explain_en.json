@@ -1,0 +1,60 @@
+{
+  "headings": {
+    "what_happened": "What happened",
+    "why_risky": "Why it is risky",
+    "next_step": "What upay should do next"
+  },
+  "order": "A Safe Order of {amount} BDT was placed and the money is being held.",
+  "courier": {
+    "delivered": "The courier marked the parcel as delivered.",
+    "in_transit": "The parcel is still in transit.",
+    "returned": "The parcel was returned to the seller.",
+    "lost": "The courier reported the parcel as lost.",
+    "not_dispatched": "The courier has no record of the parcel being dispatched."
+  },
+  "code": {
+    "used": "The buyer confirmed delivery with the delivery code.",
+    "not_used": "No delivery code was entered."
+  },
+  "dispute": "The buyer opened a dispute on {when}.",
+  "seller": {
+    "responded": "The seller has responded.",
+    "pending": "The seller has not responded yet."
+  },
+  "no_flags": "No consistency problems were found.",
+  "parties": {"BUYER": "buyer's", "SELLER": "seller's"},
+  "flags": {
+    "CODE_CONTRADICTION": "The courier shows delivery and the buyer entered the delivery code, but the buyer says the parcel was not received.",
+    "NO_COURIER_PROOF": "The seller gave no tracking number or receipt, and there is no courier record of dispatch.",
+    "EVIDENCE_EMPTY_OR_VAGUE": "The {party} evidence is empty or too vague to check.",
+    "REPEAT_CLAIMANT": "The buyer has opened {count} disputes in the last {days} days.",
+    "AMOUNT_MISMATCH": "An amount mentioned in the texts ({stated} BDT) does not match the order amount ({order_amount} BDT).",
+    "LATE_REPORT": "The dispute was filed {hours} hours after delivery.",
+    "INJECTION_DETECTED": "The evidence text contains instructions aimed at an AI system. They were ignored in the analysis and the case needs a human."
+  },
+  "classes": {
+    "SELLER_FAULT": "the seller is at fault",
+    "BUYER_FALSE_CLAIM": "the buyer's claim is not supported",
+    "COURIER_ISSUE": "the problem was caused by the courier",
+    "INSUFFICIENT_EVIDENCE": "there is not enough evidence to decide"
+  },
+  "model": "The text model estimates {percent}% that {class_description}. This is a suggestion, not a decision.",
+  "recommendation": {
+    "SUGGEST_REFUND_BUYER": "Suggested outcome: refund the buyer (the held money goes back to the buyer).",
+    "SUGGEST_REJECT_CLAIM": "Suggested outcome: reject the claim (the held money goes to the seller).",
+    "SUGGEST_COURIER_ISSUE": "Suggested outcome: the problem lies with the courier. The analyst decides whether to refund the buyer or ask the seller to send again.",
+    "NEEDS_MORE_EVIDENCE": "Suggested outcome: ask both sides for more evidence before deciding."
+  },
+  "route": {
+    "HUMAN_REVIEW": "A human analyst must review this case because: {reasons}.",
+    "FAST_LANE_CONFIRM": "Low value, high confidence and no flags: a one-click confirmation is offered. The analyst still confirms; nothing is refunded automatically."
+  },
+  "route_reasons": {
+    "FLAGS_PRESENT": "consistency flags were raised",
+    "INSUFFICIENT_EVIDENCE_PREDICTED": "the model predicts there is not enough evidence",
+    "LOW_CONFIDENCE": "the model is not confident enough",
+    "HIGH_AMOUNT": "the amount is high",
+    "INJECTION_DETECTED": "instruction-like text was found in the evidence"
+  },
+  "reason_separator": ", "
+}

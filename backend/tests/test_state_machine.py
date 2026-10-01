@@ -292,3 +292,20 @@ def test_every_transition_is_audited(db: Session) -> None:
     details = json.loads(rows[-1].payload_json)
     assert details == {"dispute": "D-0001", "from": "DELIVERED", "to": "DISPUTED"}
     assert rows[-1].actor == "buyer"
+
+
+def test_audit_rows_use_the_time_given_to_the_event(db: Session) -> None:
+    placed = datetime(2026, 10, 1, 9, 0, tzinfo=UTC)
+    order = sm.place_order(
+        db, buyer_id="B-0001", seller_id="S-0001", amount_bdt=500,
+        product_category="shoes", delivery_code=CODE, now=placed,
+    )  # fmt: skip
+    later = placed + timedelta(hours=5)
+    sm.record_courier_event(db, order.id, CourierStatus.IN_TRANSIT, now=later)
+    sm.confirm_delivery(db, order.id, CODE, now=later + timedelta(hours=1))
+    rows = db.exec(select(AuditLog).where(AuditLog.entity_id == order.id)).all()
+    stamps = {r.action: r.created_at.replace(tzinfo=UTC) for r in rows}
+    assert stamps["ORDER_PLACE_ORDER"] == placed
+    assert stamps["COURIER_IN_TRANSIT"] == later
+    assert stamps["DELIVERY_CODE_CONFIRMED"] == later + timedelta(hours=1)
+    assert stamps["ORDER_DELIVERY_CONFIRMED"] == later + timedelta(hours=1)

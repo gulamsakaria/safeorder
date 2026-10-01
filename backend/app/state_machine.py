@@ -82,9 +82,15 @@ def hash_delivery_code(order_id: str, code: str) -> str:
 
 
 def _audit(
-    session: Session, actor: str, action: str, order_id: str, payload: dict[str, Any]
+    session: Session,
+    actor: str,
+    action: str,
+    order_id: str,
+    payload: dict[str, Any],
+    now: datetime | None = None,
 ) -> None:
-    write_audit(session, actor, action, "order", order_id, json.dumps(payload, sort_keys=True))
+    """Audit row stamped with the same time as the event it records."""
+    write_audit(session, actor, action, "order", order_id, json.dumps(payload, sort_keys=True), now)
 
 
 def place_order(
@@ -120,7 +126,7 @@ def place_order(
     session.flush()
     assert transition.ledger is not None
     post_transfer(session, order_id, *transition.ledger, amount_bdt, transition.reason, now)
-    _audit(session, actor, f"ORDER_{Event.PLACE_ORDER}", order_id, {"to": transition.to})
+    _audit(session, actor, f"ORDER_{Event.PLACE_ORDER}", order_id, {"to": transition.to}, now)
     return order
 
 
@@ -157,7 +163,7 @@ def apply_event(
     session.flush()
 
     details = {"from": previous, "to": transition.to, **(payload or {})}
-    _audit(session, actor, f"ORDER_{event}", order.id, details)
+    _audit(session, actor, f"ORDER_{event}", order.id, details, now)
     return order
 
 
@@ -170,13 +176,13 @@ def confirm_delivery(
         raise LookupError(f"unknown order {order_id}")
     expected = order.delivery_code_hash
     if not hmac.compare_digest(expected, hash_delivery_code(order_id, code)):
-        _audit(session, "buyer", "DELIVERY_CODE_REJECTED", order_id, {})
+        _audit(session, "buyer", "DELIVERY_CODE_REJECTED", order_id, {}, now)
         raise InvalidDeliveryCode("wrong delivery code")
     if order.status == Status.HELD:
-        _audit(session, "buyer", "DELIVERY_CODE_CONFIRMED", order_id, {})
+        _audit(session, "buyer", "DELIVERY_CODE_CONFIRMED", order_id, {}, now)
         return apply_event(session, order_id, Event.DELIVERY_CONFIRMED, actor="buyer", now=now)
     if order.status == Status.DELIVERED:  # courier already marked it delivered; keep the proof
-        _audit(session, "buyer", "DELIVERY_CODE_CONFIRMED", order_id, {})
+        _audit(session, "buyer", "DELIVERY_CODE_CONFIRMED", order_id, {}, now)
         return order
     raise IllegalTransition(f"cannot confirm delivery in status {order.status}")
 
@@ -196,7 +202,7 @@ def record_courier_event(
     now = now or clock.now()
     session.add(CourierEvent(order_id=order_id, status=status, occurred_at=now, source=source))
     session.flush()
-    _audit(session, "courier", f"COURIER_{status.value.upper()}", order_id, {"source": source})
+    _audit(session, "courier", f"COURIER_{status.value.upper()}", order_id, {"source": source}, now)
     if order.status == Status.HELD:
         if status == CourierStatus.DELIVERED:
             return apply_event(

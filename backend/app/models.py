@@ -111,6 +111,9 @@ class Dispute(SQLModel, table=True):
     opened_at: datetime
     seller_deadline: datetime | None = None
     appeal_of: str | None = Field(default=None, foreign_key="dispute.id")
+    claim_type: str | None = None  # ClaimType chosen on the buyer form; optional
+    seller_response_text: str | None = None
+    seller_responded_at: datetime | None = None
 
 
 class EvidenceItem(SQLModel, table=True):
