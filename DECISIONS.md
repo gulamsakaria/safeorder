@@ -31,3 +31,22 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
 - `audit_log` is append-only through SQLite triggers (UPDATE and DELETE are rejected).
   `analyst_decision.note` must be non-empty (check constraint).
 - Seed wallet numbers use a `SIM-W-` prefix so they cannot look like real phone numbers.
+
+## Step 2
+
+- Ledger convention: a transfer debits the source account and credits the destination, so
+  debits equal credits per order. Balance = credits - debits. Refunds move HOLD -> BUYER_WALLET
+  as in Section 6.1; the `REFUND` account value exists in the schema but is not used.
+- Assumption: an `ESCALATED` order can still be resolved by an analyst (`ANALYST_REFUND` or
+  `ANALYST_REJECT`). The blueprint table has no way out of `ESCALATED`, which would leave the
+  held funds stuck. Change it if upay-style policy says otherwise.
+- `APPEAL` is allowed only from `DISPUTED` (as in the table). An appeal after a final
+  decision is not modelled yet; Step 8 can decide how to handle it.
+- The order has no "delivery code used" column, so the proof is kept in the audit log
+  (`DELIVERY_CODE_CONFIRMED`). The analyzer (Step 7) reads it from there.
+- Courier events only change the order while it is `HELD`: `delivered` -> `DELIVERED`,
+  `lost` -> `DISPUTABLE`. In other states the event is just recorded.
+- `released_at` is set to the time the release was processed. After a clock fast-forward this
+  can be later than `hold_until`.
+- `rules.py` holds fairness and band logic; dispute routing (Section 6.2) is added with the router
+  in Step 7. Functions flush but never commit; callers own the transaction.
