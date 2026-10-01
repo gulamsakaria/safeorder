@@ -338,3 +338,36 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
   values read from each `*.meta.json`, so no number is typed by hand). Raw dispute cases and the
   generated synthetic data are never included. Rerun it after every training run; later models
   (dispute classifier, any fine-tuned transformer) are picked up automatically.
+
+
+## Step 12 - Evaluation summary and metrics page
+
+- `python -m eval.run_all` (`make eval`) re-runs the trust evaluation from the saved model, runs the
+  injection checks, aggregates the optional time study, then writes `reports/summary.json` and
+  three figures (`reports/figures`). `summary.json` copies numbers from the individual reports; it
+  does not recompute or round them (a test compares them). Every section without a report says
+  `"status": "not_measured"` with the reason. The trust evaluation's latency numbers change a
+  little on every run, because they are timings.
+- **The metrics page (`/metrics`) shows the file as it is.** A missing number reads "not measured"
+  (a test deletes one number and checks this). In mock mode the page shows an empty state: the mock
+  has no reports and never invents any.
+- **Not measured yet, and why:** the dispute classifier, routing coverage and the wrong-refund /
+  wrong-rejection rates (no classifier: the team's cases are not in `raw/`), the held-out injection
+  set (same reason) and the analyst time study (nobody has timed real sessions; the template is
+  `docs/time_study_template.json`, the input is `data/time_study.json`, and the script refuses the
+  template's example values).
+- **Injection numbers, honestly:** the screen detects 22 of 22 phrases it was built on (a regression
+  check only: its patterns were written while looking at them) but **1 of 12** phrases written
+  afterwards with different wording (paraphrases, spaced-out or leetspeak "ignore", Bangla and
+  Banglish variants). These 12 were not used to change the screen, so the number stays an
+  indication. Conclusion for the pitch: the pattern screen is a first filter, not a defence. The
+  protection that holds is structural (no free text can change a label, a route or a ledger entry,
+  and every case with a detected injection goes to a human). Phrases the screen misses reach the
+  classifier as ordinary text, so the trained classifier must be checked on the team's own
+  injection set (Step 6).
+- **Invariance check:** 176 pairs (22 detected phrases x buyer or seller evidence x 4 base cases):
+  the classifier text, the probabilities, the recommendation and the other flags never changed,
+  and human review was always forced. This holds by construction with a stand-in classifier; it
+  does not show that a trained classifier resists the same text.
+- The phrase lists moved to `eval/injection_samples.py`, shared by the unit tests and the report.
+- `make kaggle-models` now also uploads `summary.json`, `injection_eval.json` and the figures.

@@ -12,3 +12,4 @@ pyyaml
 pytest
 ruff
 httpx
+matplotlib

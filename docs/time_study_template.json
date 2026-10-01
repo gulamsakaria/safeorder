@@ -1,0 +1,10 @@
+{
+  "study": {
+    "description": "Fill in after timing real analyst sessions. Delete these example values first.",
+    "analyst_label": "analyst-1",
+    "notes": "Same cases handled twice: once with the raw chat/records only, once with the SafeOrder console."
+  },
+  "cases": [
+    { "case_id": "EXAMPLE-1", "seconds_without_tool": 0, "seconds_with_tool": 0 }
+  ]
+}

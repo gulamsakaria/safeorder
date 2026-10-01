@@ -36,7 +36,7 @@ train:
 	PYTHONPATH=backend:. $(PY) -m scripts.train_trust
 
 eval:
-	PYTHONPATH=backend:. $(PY) -m eval.trust_eval
+	PYTHONPATH=backend:. $(PY) -m eval.run_all
 
 openapi:
 	PYTHONPATH=backend:. $(PY) -m scripts.export_openapi

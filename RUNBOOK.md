@@ -35,6 +35,17 @@ curl -X POST localhost:8000/api/demo/reset -H 'content-type: application/json' \
   call answers `503 CLASSIFIER_UNAVAILABLE`.
 - `/api/sim/*` and `/api/demo/*` are sandbox-only; set `api.demo_endpoints_enabled: false` to disable them.
 
+## Evaluation report and metrics page
+
+```bash
+make eval        # trust evaluation + injection checks + time study -> reports/summary.json, figures
+```
+
+The metrics page (`/metrics`) shows `reports/summary.json` as it is; anything not measured reads
+"not measured". For the analyst time study, copy `docs/time_study_template.json` to
+`data/time_study.json`, replace the example with real timings (seconds per case, with and without
+the tool), and run `make eval` again.
+
 ## Demo scenarios
 
 ```bash

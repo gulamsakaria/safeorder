@@ -53,6 +53,11 @@ function placeOrder(body: Schemas['CreateOrderRequest']) {
  * change in docs/openapi.json breaks the build here before it can break a screen.
  */
 export const handlers = [
+  // The mock has no evaluation reports and never invents any: the page shows its empty state.
+  http.get('*/api/metrics/summary', () =>
+    HttpResponse.json<Schemas['MetricsOut']>({ available: false, summary: null, reports: {} }),
+  ),
+
   http.get('*/api/sellers/search', ({ request }) => {
     const q = (new URL(request.url).searchParams.get('q') ?? '').trim().toLowerCase()
     if (!q) return problem(422, 'VALIDATION_ERROR', 'q: field required')

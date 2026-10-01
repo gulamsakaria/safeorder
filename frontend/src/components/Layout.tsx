@@ -5,7 +5,8 @@ import { useI18n } from '../i18n/useI18n'
 export function Layout() {
   const { t, toggle } = useI18n()
   // the analyst console needs room for side-by-side columns; the buyer screens stay phone-sized
-  const wide = useLocation().pathname.startsWith('/analyst')
+  const path = useLocation().pathname
+  const wide = path.startsWith('/analyst') || path.startsWith('/metrics')
   const width = wide ? 'max-w-5xl' : 'max-w-xl'
   const link = ({ isActive }: { isActive: boolean }) =>
     `rounded-lg px-3 py-2 text-sm font-semibold ${isActive ? 'bg-blue-100 text-blue-900' : 'text-slate-700'}`
@@ -37,6 +38,9 @@ export function Layout() {
         </NavLink>
         <NavLink to="/analyst" className={link}>
           {t('nav.analyst')}
+        </NavLink>
+        <NavLink to="/metrics" className={link}>
+          {t('nav.metrics')}
         </NavLink>
         <NavLink to="/demo" className={link}>
           {t('nav.demo')}

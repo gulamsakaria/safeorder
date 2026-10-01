@@ -22,7 +22,7 @@ REPO = Path(__file__).resolve().parents[1]
 OUT = REPO / "build" / "kaggle" / "models"
 OWNER = "bmr07sakaria"
 DATASET_SLUG = "safeorder-trained-models"
-REPORT_PATTERNS = ("*eval*.json", "summary.json")
+REPORT_PATTERNS = ("*eval*.json", "summary.json", "figures/*.png")
 MODEL_SUFFIXES = {".joblib", ".json", ".pt", ".pkl", ".bin", ".safetensors", ".txt", ".md"}
 META_KEYS = ("version", "trained_on", "calibration", "training", "licence", "base_model")
 

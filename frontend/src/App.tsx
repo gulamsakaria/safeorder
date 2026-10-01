@@ -5,6 +5,7 @@ import { useI18n } from './i18n/useI18n'
 import { AnalystCasePage } from './pages/AnalystCasePage'
 import { AnalystQueuePage } from './pages/AnalystQueuePage'
 import { DemoPage } from './pages/DemoPage'
+import { MetricsPage } from './pages/MetricsPage'
 import { DisputePage } from './pages/DisputePage'
 import { OrderPage } from './pages/OrderPage'
 import { ReportProblemPage } from './pages/ReportProblemPage'
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="analyst" element={<AnalystQueuePage />} />
         <Route path="analyst/dispute/:id" element={<AnalystCasePage />} />
         <Route path="analyst/seller/:id" element={<SellerHistoryPage />} />
+        <Route path="metrics" element={<MetricsPage />} />
         <Route path="demo" element={<DemoPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>

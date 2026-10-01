@@ -56,6 +56,8 @@ export const calls = {
   demoReset: async (scenarioSet: 'default' | 'demo' | 'empty' = 'default') =>
     unwrap(await api.POST('/api/demo/reset', { body: { scenario_set: scenarioSet } })),
 
+  metrics: async () => unwrap(await api.GET('/api/metrics/summary')),
+
   analystQueue: async (query: { route?: string; min_amount_bdt?: number } = {}) =>
     unwrap(await api.GET('/api/analyst/queue', { params: { query } })),
 
