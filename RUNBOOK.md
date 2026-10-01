@@ -35,6 +35,18 @@ curl -X POST localhost:8000/api/demo/reset -H 'content-type: application/json' \
   call answers `503 CLASSIFIER_UNAVAILABLE`.
 - `/api/sim/*` and `/api/demo/*` are sandbox-only; set `api.demo_endpoints_enabled: false` to disable them.
 
+## Documents, secret scan, Hugging Face (private)
+
+```bash
+make eval && make docs                                  # regenerate docs/*.md from reports/*.json
+.venv/bin/python -m scripts.secret_scan                 # exit 1 if anything looks like a credential
+PYTHONPATH=backend:. .venv/bin/python -m scripts.upload_hf --repo-id <you>/<name> --dry-run
+HF_TOKEN=<token> PYTHONPATH=backend:. .venv/bin/python -m scripts.upload_hf --repo-id <you>/<name>
+```
+
+The upload creates or reuses a **private** model repository and refuses a public one. Never put a
+token in a file; pass it through the environment.
+
 ## Evaluation report and metrics page
 
 ```bash

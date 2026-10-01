@@ -18,3 +18,4 @@ extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/build_kaggle.py" = ["E501"]  # the notebook text is prose, not code
+"scripts/build_docs.py" = ["E501"]  # the document templates are prose

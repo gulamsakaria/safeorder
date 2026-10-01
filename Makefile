@@ -1,6 +1,6 @@
 PY := .venv/bin/python
 
-.PHONY: setup data train api web web-mock test test-web lint eval demo-reset openapi kaggle kaggle-models gen-api
+.PHONY: setup data train api web web-mock test test-web lint eval demo-reset openapi kaggle kaggle-models gen-api docs
 
 setup:
 	python3.11 -m venv .venv
@@ -40,6 +40,9 @@ eval:
 
 openapi:
 	PYTHONPATH=backend:. $(PY) -m scripts.export_openapi
+
+docs:
+	PYTHONPATH=backend:. $(PY) -m scripts.build_docs
 
 kaggle:
 	PYTHONPATH=backend:. $(PY) -m scripts.build_kaggle

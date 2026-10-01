@@ -371,3 +371,30 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
   does not show that a trained classifier resists the same text.
 - The phrase lists moved to `eval/injection_samples.py`, shared by the unit tests and the report.
 - `make kaggle-models` now also uploads `summary.json`, `injection_eval.json` and the figures.
+
+
+## Step 14 - Documentation set, secret scan, private Hugging Face upload
+
+- `make docs` (`scripts/build_docs.py`) writes the model card, dataset card, evaluation protocol,
+  responsible-AI note, licence register and an index into `docs/`. Numbers are read from
+  `reports/*.json`; a test regenerates each file and fails if the committed copy is stale. Every
+  document states that the data is synthetic and the system not validated on real data.
+- **The evaluation protocol discloses that v2 influenced the design.** The limited-history override
+  threshold was fixed before looking at v2, but the policy comparison is measured on v2, and the
+  monotone constraints were added after a behavioural check on v2 sellers. v2 is therefore a
+  held-out *generator*, not a pristine blind test.
+- **The licence register is read from installed package metadata**, so it records what is installed
+  here and is not a legal opinion. Items a script cannot know are listed as "to confirm": the
+  LLM terms-of-use question (needed before dispute cases written with ChatGPT or Gemini are used
+  for training), the font licence, and our own licence (the repository has none, so all rights are
+  reserved by default).
+- **Not written, because it needs the dispute cases or people:** the dispute classifier's model
+  card and dataset card, the team agreement, logic chain, interview consent note, draft Safe Order
+  terms, regulatory note, organiser questions and the prompt log. The index says so.
+- `scripts/secret_scan.py` (also a test over every tracked file) looks for tokens and keys and
+  prints only the file, line and kind, never the match.
+- `scripts/upload_hf.py` stages the model, card, reports and figures, scans them, and uploads to a
+  **private** Hugging Face repository only (the token is read from `HF_TOKEN`; a public existing
+  repository is refused; there is no flag to publish). **It has only been run with `--dry-run`:
+  nothing has been uploaded to Hugging Face**, because the repository name and the decision to
+  put the model there belong to the team.

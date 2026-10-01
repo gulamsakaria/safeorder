@@ -13,3 +13,4 @@ pytest
 ruff
 httpx
 matplotlib
+huggingface_hub

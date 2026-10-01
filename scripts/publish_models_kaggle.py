@@ -76,6 +76,7 @@ def build() -> Path:
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
     models, reports = collect_models(), collect_reports()
+    reports += sorted((REPO / "docs").glob("model_card*.md"))  # the cards travel with the models
     for path in models + reports:
         target = OUT / path.relative_to(REPO)
         target.parent.mkdir(parents=True, exist_ok=True)
