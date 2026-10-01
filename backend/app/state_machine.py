@@ -8,6 +8,7 @@ transaction (``db.session_scope``).
 import hashlib
 import hmac
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -100,11 +101,14 @@ def place_order(
     seller_id: str,
     amount_bdt: int,
     product_category: str,
-    delivery_code: str,
+    delivery_code: str | Callable[[str], str],
     now: datetime | None = None,
     actor: str = "buyer",
 ) -> Order:
-    """Create a Safe Order and hold the money: BUYER_WALLET -> HOLD."""
+    """Create a Safe Order and hold the money: BUYER_WALLET -> HOLD.
+
+    ``delivery_code`` is the code itself, or a function that derives it from the new order id.
+    """
     if amount_bdt <= 0:
         raise ValueError("amount_bdt must be positive")
     if session.get(Buyer, buyer_id) is None or session.get(Seller, seller_id) is None:
@@ -119,7 +123,9 @@ def place_order(
         product_category=product_category,
         amount_bdt=amount_bdt,
         status=transition.to,
-        delivery_code_hash=hash_delivery_code(order_id, delivery_code),
+        delivery_code_hash=hash_delivery_code(
+            order_id, delivery_code(order_id) if callable(delivery_code) else delivery_code
+        ),
         placed_at=now,
     )
     session.add(order)

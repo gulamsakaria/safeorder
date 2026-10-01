@@ -191,8 +191,18 @@ def train_model(
 
     params = dict(settings["lightgbm"])
     early_stopping = params.pop("early_stopping_rounds")
+    constrained = set(settings.get("monotone_increasing_risk", []))
+    if not constrained <= set(FEATURE_COLUMNS):
+        raise ValueError(f"unknown monotone features: {constrained - set(FEATURE_COLUMNS)}")
+    constraints = [1 if c in constrained else 0 for c in FEATURE_COLUMNS]
     classifier = lgb.LGBMClassifier(
-        **params, random_state=seed, deterministic=True, force_row_wise=True, n_jobs=1, verbose=-1
+        **params,
+        monotone_constraints=constraints,
+        random_state=seed,
+        deterministic=True,
+        force_row_wise=True,
+        n_jobs=1,
+        verbose=-1,
     )
     classifier.fit(
         x.iloc[parts["train"]], y[parts["train"]],

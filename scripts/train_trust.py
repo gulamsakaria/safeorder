@@ -32,6 +32,7 @@ def main() -> None:
         "feature_medians": model.medians,
         "hyperparameters": settings["lightgbm"],
         "calibration": settings["calibration"],
+        "monotone_increasing_risk": settings.get("monotone_increasing_risk", []),
         "split": settings["split"],
         "training": {k: v for k, v in report.items() if k != "split_seller_ids"},
         "libraries": {

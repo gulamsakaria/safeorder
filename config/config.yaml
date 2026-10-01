@@ -45,6 +45,13 @@ dispute:
 api:
   base_path: /api
   cors_origins: ["http://localhost:5173"]
+  demo_endpoints_enabled: true     # /api/sim/* and /api/demo/*; switch off outside the sandbox demo
+  delivery_code_digits: 6          # sandbox codes are derived from the seed; not a security feature
+  max_amount_bdt: 200000
+  max_claim_chars: 2000
+  max_evidence_chars: 4000
+  max_note_chars: 2000
+  search_limit: 10
 
 # Synthetic seller generator (BLUEPRINT.md Section 8.2). Every number here is an assumption,
 # not an observation of any real market. Ranges are [low, high].
@@ -194,6 +201,9 @@ trust_model:
     reg_lambda: 1.0
     early_stopping_rounds: 30
   calibration: platt             # Platt scaling: the calibration split is too small for isotonic
+  # More refunds or disputes must never make a seller look safer. Without this constraint, one
+  # extra refund and dispute raised the score of about a quarter of the sellers (see DECISIONS.md).
+  monotone_increasing_risk: [refund_rate, dispute_rate]
   burst_ratio_floor: 1.0         # minimum daily average used as the burst-ratio denominator
   overlap_min_buyers: 5          # fewer buyers than this: shared_buyer_overlap is not meaningful
   reasons: {min: 2, max: 4, min_abs_contribution: 0.05}

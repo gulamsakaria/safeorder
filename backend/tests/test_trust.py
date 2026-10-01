@@ -315,3 +315,30 @@ def test_generic_wording_carries_units() -> None:
     assert "30%" in rs.render("GENERIC_RISK", "dispute_rate", 0.3, "en")
     assert "৩০%" in rs.render("GENERIC_RISK", "dispute_rate", 0.3, "bn")
     assert "778 days" in rs.render("GENERIC_RISK", "account_age_days", 778, "en")
+
+
+def test_more_refunds_and_disputes_never_make_a_seller_look_safer(trained) -> None:
+    model, _, features, _ = trained
+    worse = features.copy()
+    worse["orders_total"] += 1
+    worse["refund_count"] += 1
+    worse["dispute_count"] += 1
+    worse["refund_rate"] = worse["refund_count"] / worse["orders_total"]
+    worse["dispute_rate"] = worse["dispute_count"] / worse["orders_total"]
+    before = model.predict_proba(features)
+    assert (model.predict_proba(worse) >= before - 1e-12).all()
+    # and the same for a larger step on each rate separately
+    for column in ("refund_rate", "dispute_rate"):
+        bumped = features.assign(**{column: features[column] + 0.2})
+        assert (model.predict_proba(bumped) >= before - 1e-12).all(), column
+
+
+def test_unknown_monotone_feature_is_rejected(trained) -> None:
+    _, _, features, sellers = trained
+    cfg = load_config()
+    cfg = {
+        **cfg,
+        "trust_model": {**cfg["trust_model"], "monotone_increasing_risk": ["not_a_feature"]},
+    }
+    with pytest.raises(ValueError):
+        train_model(features, sellers.loc[features.index, "is_high_risk"], cfg)

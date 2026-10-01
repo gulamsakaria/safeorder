@@ -1,0 +1,73 @@
+"""Shared request dependencies: database session, models and configuration."""
+
+import threading
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
+
+from fastapi import Depends, Request
+from sqlalchemy import Engine
+from sqlmodel import Session
+
+from app.api.errors import ApiError, ModelUnavailable
+from app.config import load_config
+from app.db import create_db, make_engine
+from app.disputes.classifier import DisputeClassifier, load_classifier
+from app.trust.model import TrustModel
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+_LOCK = threading.Lock()
+
+
+def get_config(request: Request) -> dict[str, Any]:
+    return getattr(request.app.state, "cfg", None) or load_config()
+
+
+def get_engine(request: Request) -> Engine:
+    state = request.app.state
+    if getattr(state, "engine", None) is None:
+        with _LOCK:
+            if getattr(state, "engine", None) is None:
+                engine = make_engine()
+                create_db(engine)
+                state.engine = engine
+    return state.engine
+
+
+def get_session(engine: Engine = Depends(get_engine)) -> Iterator[Session]:
+    """One session per request. Handlers commit explicitly; an error means nothing is saved."""
+    with Session(engine) as session:
+        yield session
+
+
+def get_trust_model(request: Request, cfg: dict[str, Any] = Depends(get_config)) -> TrustModel:
+    state = request.app.state
+    if getattr(state, "trust_model", None) is None:
+        path = REPO_ROOT / cfg["paths"]["models_dir"] / f"{cfg['trust_model']['version']}.joblib"
+        if not path.exists():
+            raise ModelUnavailable(f"trust model not found at {path.name}: run `make train`")
+        with _LOCK:
+            state.trust_model = TrustModel.load(path)
+    return state.trust_model
+
+
+def get_classifier(request: Request) -> DisputeClassifier:
+    classifier = getattr(request.app.state, "classifier", None)
+    return classifier if classifier is not None else load_classifier()
+
+
+def require_demo(cfg: dict[str, Any] = Depends(get_config)) -> None:
+    """Demo-only endpoints answer 404 when switched off in the config."""
+    if not cfg["api"]["demo_endpoints_enabled"]:
+        raise ApiError(404, "NOT_FOUND", "not found")
+
+
+def get_optional_trust_model(
+    request: Request, cfg: dict[str, Any] = Depends(get_config)
+) -> TrustModel | None:
+    """The trust model, or None when it is not trained. Used where a money decision must not
+    fail only because a score cannot be refreshed."""
+    try:
+        return get_trust_model(request, cfg)
+    except ModelUnavailable:
+        return None

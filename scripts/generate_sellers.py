@@ -559,47 +559,13 @@ def summarize(data: GeneratedData) -> dict[str, Any]:
 def load_into_db(data: GeneratedData, engine: Any, features: pd.DataFrame | None = None) -> None:
     """Load sellers, buyers, daily stats and (optionally) trust features for the demo.
 
-    Orders and the ledger stay in CSV files.
+    Orders and the ledger stay in CSV files. The loading code lives in ``app.seed``.
     """
-    from sqlalchemy import insert
-    from sqlmodel import Session
+    from app.seed import load_synthetic
 
-    from app.models import Buyer, Seller, SellerDailyStats, SellerFeatures
-
-    def aware(text: str) -> datetime:
-        return datetime.fromisoformat(text).replace(tzinfo=UTC)
-
-    with Session(engine) as session:
-        session.add_all(
-            Seller(
-                id=r.id, display_name=r.display_name, wallet_no=r.wallet_no,
-                created_at=aware(r.created_at), category=r.category, archetype=r.archetype,
-                is_high_risk=bool(r.is_high_risk),
-            )
-            for r in data.sellers.itertuples()
-        )  # fmt: skip
-        session.add_all(
-            Buyer(id=r.id, display_name=r.display_name, wallet_no=r.wallet_no,
-                  created_at=aware(r.created_at))
-            for r in data.buyers.itertuples()
-        )  # fmt: skip
-        session.commit()
-        rows = data.daily_stats.assign(date=lambda f: pd.to_datetime(f["date"]).dt.date).rename(
-            columns={"seller_id": "seller_id"}
-        )
-        records = rows.to_dict(orient="records")
-        chunk = 20_000
-        for start in range(0, len(records), chunk):
-            session.execute(insert(SellerDailyStats), records[start : start + chunk])
-        session.commit()
-        if features is not None:
-            as_of = aware(data.params["as_of"])
-            feature_rows = features.reset_index().rename(columns={"index": "seller_id"})
-            feature_rows = feature_rows.astype(object).where(feature_rows.notna(), None)
-            session.add_all(
-                SellerFeatures(as_of=as_of, **row) for row in feature_rows.to_dict("records")
-            )
-            session.commit()
+    load_synthetic(
+        engine, data.sellers, data.buyers, data.daily_stats, features, data.params["as_of"]
+    )
 
 
 def write_assumptions_doc(path: Path, reports_dir: Path) -> None:

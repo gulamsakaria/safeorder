@@ -1,6 +1,6 @@
 PY := .venv/bin/python
 
-.PHONY: setup data train api web test lint eval demo-reset
+.PHONY: setup data train api web test lint eval demo-reset openapi
 
 setup:
 	python3.11 -m venv .venv
@@ -28,6 +28,9 @@ train:
 
 eval:
 	PYTHONPATH=backend:. $(PY) -m eval.trust_eval
+
+openapi:
+	PYTHONPATH=backend:. $(PY) -m scripts.export_openapi
 
 demo-reset:
 	@echo "not implemented yet (Step 11)"

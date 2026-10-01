@@ -1,0 +1,2165 @@
+{
+  "components": {
+    "schemas": {
+      "AdvanceClockRequest": {
+        "properties": {
+          "hours": {
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Hours",
+            "type": "number"
+          }
+        },
+        "required": [
+          "hours"
+        ],
+        "title": "AdvanceClockRequest",
+        "type": "object"
+      },
+      "AnalysisOut": {
+        "properties": {
+          "class_probs": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Class Probs",
+            "type": "object"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "explanation_bn": {
+            "title": "Explanation Bn",
+            "type": "string"
+          },
+          "explanation_en": {
+            "title": "Explanation En",
+            "type": "string"
+          },
+          "explanation_sections": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "Explanation Sections",
+            "type": "object"
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "injection_detected": {
+            "title": "Injection Detected",
+            "type": "boolean"
+          },
+          "model_versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Model Versions",
+            "type": "object"
+          },
+          "order_id": {
+            "title": "Order Id",
+            "type": "string"
+          },
+          "recommendation": {
+            "title": "Recommendation",
+            "type": "string"
+          },
+          "route": {
+            "title": "Route",
+            "type": "string"
+          },
+          "route_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Route Reasons",
+            "type": "array"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineEventOut"
+            },
+            "title": "Timeline",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dispute_id",
+          "order_id",
+          "timeline",
+          "class_probs",
+          "flags",
+          "injection_detected",
+          "recommendation",
+          "route",
+          "route_reasons",
+          "explanation_en",
+          "explanation_bn",
+          "explanation_sections",
+          "model_versions"
+        ],
+        "title": "AnalysisOut",
+        "type": "object"
+      },
+      "AnalystCaseOut": {
+        "properties": {
+          "analysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalysisOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/BuyerPublic"
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionRecordOut"
+            },
+            "title": "Decisions",
+            "type": "array"
+          },
+          "dispute": {
+            "$ref": "#/components/schemas/DisputeOut"
+          },
+          "order": {
+            "$ref": "#/components/schemas/OrderOut"
+          },
+          "seller": {
+            "$ref": "#/components/schemas/SellerPublic"
+          },
+          "seller_trust": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SnapshotOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "dispute",
+          "order",
+          "buyer",
+          "seller",
+          "seller_trust",
+          "analysis",
+          "decisions"
+        ],
+        "title": "AnalystCaseOut",
+        "type": "object"
+      },
+      "AnalystDecisionType": {
+        "enum": [
+          "REFUND_BUYER",
+          "REJECT_CLAIM",
+          "REQUEST_MORE_EVIDENCE",
+          "ESCALATE"
+        ],
+        "title": "AnalystDecisionType",
+        "type": "string"
+      },
+      "BuyerEvidenceRequest": {
+        "properties": {
+          "evidence_text": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Evidence Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "evidence_text"
+        ],
+        "title": "BuyerEvidenceRequest",
+        "type": "object"
+      },
+      "BuyerPublic": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "wallet_no": {
+            "title": "Wallet No",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "wallet_no",
+          "created_at"
+        ],
+        "title": "BuyerPublic",
+        "type": "object"
+      },
+      "ClaimType": {
+        "enum": [
+          "NOT_RECEIVED",
+          "WRONG_ITEM",
+          "DAMAGED",
+          "NOT_AS_DESCRIBED",
+          "OTHER"
+        ],
+        "title": "ClaimType",
+        "type": "string"
+      },
+      "ClockOut": {
+        "properties": {
+          "fired": {
+            "items": {
+              "$ref": "#/components/schemas/FiredEvent"
+            },
+            "title": "Fired",
+            "type": "array"
+          },
+          "now": {
+            "title": "Now",
+            "type": "string"
+          }
+        },
+        "required": [
+          "now",
+          "fired"
+        ],
+        "title": "ClockOut",
+        "type": "object"
+      },
+      "ConfirmDeliveryRequest": {
+        "properties": {
+          "code": {
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "ConfirmDeliveryRequest",
+        "type": "object"
+      },
+      "CourierEventRequest": {
+        "properties": {
+          "order_id": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Order Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CourierStatus"
+          }
+        },
+        "required": [
+          "order_id",
+          "status"
+        ],
+        "title": "CourierEventRequest",
+        "type": "object"
+      },
+      "CourierStatus": {
+        "enum": [
+          "not_dispatched",
+          "in_transit",
+          "delivered",
+          "returned",
+          "lost"
+        ],
+        "title": "CourierStatus",
+        "type": "string"
+      },
+      "CreateDisputeRequest": {
+        "properties": {
+          "claim_text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Claim Text",
+            "type": "string"
+          },
+          "claim_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClaimType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence_text": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Evidence Text",
+            "type": "string"
+          },
+          "order_id": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Order Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id",
+          "claim_text"
+        ],
+        "title": "CreateDisputeRequest",
+        "type": "object"
+      },
+      "CreateOrderRequest": {
+        "properties": {
+          "amount_bdt": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 200000.0,
+            "title": "Amount Bdt",
+            "type": "integer"
+          },
+          "buyer_id": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Buyer Id",
+            "type": "string"
+          },
+          "product_category": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Product Category",
+            "type": "string"
+          },
+          "seller_id": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Seller Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "buyer_id",
+          "seller_id",
+          "amount_bdt",
+          "product_category"
+        ],
+        "title": "CreateOrderRequest",
+        "type": "object"
+      },
+      "DecisionOut": {
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/AnalystDecisionType"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "dispute_status": {
+            "$ref": "#/components/schemas/DisputeStatus"
+          },
+          "followed_suggestion": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Followed Suggestion"
+          },
+          "ledger_balanced": {
+            "title": "Ledger Balanced",
+            "type": "boolean"
+          },
+          "order_status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "seller_deadline": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Deadline"
+          },
+          "trust": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrustChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "dispute_id",
+          "decision",
+          "order_status",
+          "dispute_status",
+          "ledger_balanced",
+          "followed_suggestion",
+          "trust",
+          "seller_deadline"
+        ],
+        "title": "DecisionOut",
+        "type": "object"
+      },
+      "DecisionRecordOut": {
+        "properties": {
+          "analyst_id": {
+            "title": "Analyst Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/AnalystDecisionType"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "analyst_id",
+          "decision",
+          "note",
+          "created_at"
+        ],
+        "title": "DecisionRecordOut",
+        "type": "object"
+      },
+      "DecisionRequest": {
+        "properties": {
+          "analyst_id": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Analyst Id",
+            "type": "string"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/AnalystDecisionType"
+          },
+          "note": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "note",
+          "analyst_id"
+        ],
+        "title": "DecisionRequest",
+        "type": "object"
+      },
+      "DemoResetOut": {
+        "properties": {
+          "loaded": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Loaded",
+            "type": "object"
+          },
+          "now": {
+            "title": "Now",
+            "type": "string"
+          },
+          "scenario_set": {
+            "title": "Scenario Set",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_set",
+          "loaded",
+          "now"
+        ],
+        "title": "DemoResetOut",
+        "type": "object"
+      },
+      "DemoResetRequest": {
+        "properties": {
+          "scenario_set": {
+            "default": "default",
+            "maxLength": 80,
+            "title": "Scenario Set",
+            "type": "string"
+          }
+        },
+        "title": "DemoResetRequest",
+        "type": "object"
+      },
+      "DisputeOut": {
+        "properties": {
+          "claim_text": {
+            "title": "Claim Text",
+            "type": "string"
+          },
+          "claim_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClaimType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceOut"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "opened_at": {
+            "format": "date-time",
+            "title": "Opened At",
+            "type": "string"
+          },
+          "opened_by": {
+            "$ref": "#/components/schemas/Party"
+          },
+          "order_id": {
+            "title": "Order Id",
+            "type": "string"
+          },
+          "seller_deadline": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Deadline"
+          },
+          "seller_responded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Responded At"
+          },
+          "seller_response_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Response Text"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DisputeStatus"
+          }
+        },
+        "required": [
+          "id",
+          "order_id",
+          "status",
+          "opened_by",
+          "claim_text",
+          "claim_type",
+          "opened_at",
+          "seller_deadline",
+          "seller_response_text",
+          "seller_responded_at",
+          "evidence"
+        ],
+        "title": "DisputeOut",
+        "type": "object"
+      },
+      "DisputeStatus": {
+        "enum": [
+          "OPEN",
+          "SELLER_RESPONDED",
+          "ANALYZED",
+          "RESOLVED",
+          "ESCALATED"
+        ],
+        "title": "DisputeStatus",
+        "type": "string"
+      },
+      "EvidenceOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description_text": {
+            "title": "Description Text",
+            "type": "string"
+          },
+          "party": {
+            "$ref": "#/components/schemas/Party"
+          }
+        },
+        "required": [
+          "party",
+          "description_text",
+          "created_at"
+        ],
+        "title": "EvidenceOut",
+        "type": "object"
+      },
+      "FiredEvent": {
+        "properties": {
+          "event": {
+            "title": "Event",
+            "type": "string"
+          },
+          "order_id": {
+            "title": "Order Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "order_id",
+          "event"
+        ],
+        "title": "FiredEvent",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "LedgerAccount": {
+        "enum": [
+          "BUYER_WALLET",
+          "HOLD",
+          "SELLER_WALLET",
+          "REFUND"
+        ],
+        "title": "LedgerAccount",
+        "type": "string"
+      },
+      "LedgerEntryOut": {
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/LedgerAccount"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "credit": {
+            "title": "Credit",
+            "type": "integer"
+          },
+          "debit": {
+            "title": "Debit",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account",
+          "debit",
+          "credit",
+          "reason",
+          "created_at"
+        ],
+        "title": "LedgerEntryOut",
+        "type": "object"
+      },
+      "MetricsOut": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "reports": {
+            "additionalProperties": true,
+            "title": "Reports",
+            "type": "object"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          }
+        },
+        "required": [
+          "available",
+          "summary",
+          "reports"
+        ],
+        "title": "MetricsOut",
+        "type": "object"
+      },
+      "OrderOut": {
+        "properties": {
+          "amount_bdt": {
+            "title": "Amount Bdt",
+            "type": "integer"
+          },
+          "buyer_id": {
+            "title": "Buyer Id",
+            "type": "string"
+          },
+          "can_report_problem": {
+            "title": "Can Report Problem",
+            "type": "boolean"
+          },
+          "courier_status": {
+            "$ref": "#/components/schemas/CourierStatus"
+          },
+          "delivered_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivered At"
+          },
+          "delivery_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Sandbox only: returned once, when the order is created.",
+            "title": "Delivery Code"
+          },
+          "dispute_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dispute Ids",
+            "type": "array"
+          },
+          "hold_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hold Until"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "ledger": {
+            "items": {
+              "$ref": "#/components/schemas/LedgerEntryOut"
+            },
+            "title": "Ledger",
+            "type": "array"
+          },
+          "ledger_balanced": {
+            "title": "Ledger Balanced",
+            "type": "boolean"
+          },
+          "placed_at": {
+            "format": "date-time",
+            "title": "Placed At",
+            "type": "string"
+          },
+          "product_category": {
+            "title": "Product Category",
+            "type": "string"
+          },
+          "released_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Released At"
+          },
+          "seller_id": {
+            "title": "Seller Id",
+            "type": "string"
+          },
+          "server_time": {
+            "title": "Server Time",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "timeline": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineEventOut"
+            },
+            "title": "Timeline",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "buyer_id",
+          "seller_id",
+          "product_category",
+          "amount_bdt",
+          "status",
+          "placed_at",
+          "delivered_at",
+          "hold_until",
+          "released_at",
+          "courier_status",
+          "ledger",
+          "ledger_balanced",
+          "timeline",
+          "dispute_ids",
+          "can_report_problem",
+          "server_time"
+        ],
+        "title": "OrderOut",
+        "type": "object"
+      },
+      "OrderStatus": {
+        "enum": [
+          "HELD",
+          "DELIVERED",
+          "DISPUTABLE",
+          "DISPUTED",
+          "RELEASED",
+          "REFUNDED",
+          "ESCALATED"
+        ],
+        "title": "OrderStatus",
+        "type": "string"
+      },
+      "Party": {
+        "enum": [
+          "BUYER",
+          "SELLER"
+        ],
+        "title": "Party",
+        "type": "string"
+      },
+      "QueueItemOut": {
+        "properties": {
+          "amount_bdt": {
+            "title": "Amount Bdt",
+            "type": "integer"
+          },
+          "analyzed": {
+            "title": "Analyzed",
+            "type": "boolean"
+          },
+          "dispute_id": {
+            "title": "Dispute Id",
+            "type": "string"
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "opened_at": {
+            "format": "date-time",
+            "title": "Opened At",
+            "type": "string"
+          },
+          "order_id": {
+            "title": "Order Id",
+            "type": "string"
+          },
+          "recommendation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommendation"
+          },
+          "route": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route"
+          },
+          "seller_deadline": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Deadline"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DisputeStatus"
+          }
+        },
+        "required": [
+          "dispute_id",
+          "order_id",
+          "status",
+          "amount_bdt",
+          "opened_at",
+          "seller_deadline",
+          "analyzed",
+          "route",
+          "recommendation",
+          "flags"
+        ],
+        "title": "QueueItemOut",
+        "type": "object"
+      },
+      "ReasonOut": {
+        "properties": {
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "text_bn": {
+            "title": "Text Bn",
+            "type": "string"
+          },
+          "text_en": {
+            "title": "Text En",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "direction",
+          "text_en",
+          "text_bn"
+        ],
+        "title": "ReasonOut",
+        "type": "object"
+      },
+      "ScoreHistoryOut": {
+        "properties": {
+          "seller_id": {
+            "title": "Seller Id",
+            "type": "string"
+          },
+          "snapshots": {
+            "items": {
+              "$ref": "#/components/schemas/SnapshotOut"
+            },
+            "title": "Snapshots",
+            "type": "array"
+          }
+        },
+        "required": [
+          "seller_id",
+          "snapshots"
+        ],
+        "title": "ScoreHistoryOut",
+        "type": "object"
+      },
+      "SellerPublic": {
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "wallet_no": {
+            "title": "Wallet No",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "wallet_no",
+          "created_at",
+          "category"
+        ],
+        "title": "SellerPublic",
+        "type": "object"
+      },
+      "SellerResponseRequest": {
+        "properties": {
+          "evidence_text": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Evidence Text",
+            "type": "string"
+          },
+          "response_text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Response Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "response_text"
+        ],
+        "title": "SellerResponseRequest",
+        "type": "object"
+      },
+      "SnapshotOut": {
+        "properties": {
+          "band": {
+            "$ref": "#/components/schemas/TrustBand"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonOut"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/SnapshotTrigger"
+          }
+        },
+        "required": [
+          "id",
+          "score",
+          "band",
+          "reasons",
+          "model_version",
+          "trigger",
+          "created_at"
+        ],
+        "title": "SnapshotOut",
+        "type": "object"
+      },
+      "SnapshotTrigger": {
+        "enum": [
+          "INITIAL",
+          "DISPUTE_RESOLVED",
+          "MANUAL"
+        ],
+        "title": "SnapshotTrigger",
+        "type": "string"
+      },
+      "TimelineEventOut": {
+        "properties": {
+          "event": {
+            "title": "Event",
+            "type": "string"
+          },
+          "t": {
+            "title": "T",
+            "type": "string"
+          }
+        },
+        "required": [
+          "t",
+          "event"
+        ],
+        "title": "TimelineEventOut",
+        "type": "object"
+      },
+      "TrustBand": {
+        "enum": [
+          "TRUSTED",
+          "CAUTION",
+          "HIGH_RISK",
+          "LIMITED_HISTORY"
+        ],
+        "title": "TrustBand",
+        "type": "string"
+      },
+      "TrustChange": {
+        "properties": {
+          "after": {
+            "$ref": "#/components/schemas/SnapshotOut"
+          },
+          "before": {
+            "$ref": "#/components/schemas/SnapshotOut"
+          }
+        },
+        "required": [
+          "before",
+          "after"
+        ],
+        "title": "TrustChange",
+        "type": "object"
+      },
+      "TrustCheckRequest": {
+        "properties": {
+          "seller_id": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seller Id"
+          },
+          "wallet_no": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wallet No"
+          }
+        },
+        "title": "TrustCheckRequest",
+        "type": "object"
+      },
+      "TrustCheckResponse": {
+        "properties": {
+          "band": {
+            "$ref": "#/components/schemas/TrustBand"
+          },
+          "generated_at": {
+            "title": "Generated At",
+            "type": "string"
+          },
+          "limited_history": {
+            "title": "Limited History",
+            "type": "boolean"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonOut"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "requires_extra_confirmation": {
+            "title": "Requires Extra Confirmation",
+            "type": "boolean"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "seller_id": {
+            "title": "Seller Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seller_id",
+          "score",
+          "band",
+          "limited_history",
+          "reasons",
+          "model_version",
+          "generated_at",
+          "requires_extra_confirmation"
+        ],
+        "title": "TrustCheckResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "SafeOrder",
+    "version": "1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/analyst/disputes/{dispute_id}": {
+      "get": {
+        "description": "Everything an analyst needs: what happened, why it is risky, and what to do next.",
+        "operationId": "case_view_api_analyst_disputes__dispute_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dispute_id",
+            "required": true,
+            "schema": {
+              "title": "Dispute Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalystCaseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Case View",
+        "tags": [
+          "analyst"
+        ]
+      }
+    },
+    "/api/analyst/disputes/{dispute_id}/decision": {
+      "post": {
+        "description": "Record the human decision, move the ledger, and refresh the seller's trust score.",
+        "operationId": "decide_api_analyst_disputes__dispute_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dispute_id",
+            "required": true,
+            "schema": {
+              "title": "Dispute Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decide",
+        "tags": [
+          "analyst"
+        ]
+      }
+    },
+    "/api/analyst/queue": {
+      "get": {
+        "description": "Disputes waiting for a human, human-review cases first, larger amounts first.",
+        "operationId": "queue_api_analyst_queue_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "route",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 30,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Route"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DisputeStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "min_amount_bdt",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Amount Bdt"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/QueueItemOut"
+                  },
+                  "title": "Response Queue Api Analyst Queue Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Queue",
+        "tags": [
+          "analyst"
+        ]
+      }
+    },
+    "/api/demo/reset": {
+      "post": {
+        "description": "Demo only: wipe the database and the simulated clock, then load a scenario set.",
+        "operationId": "reset_api_demo_reset_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DemoResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoResetOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/disputes": {
+      "post": {
+        "description": "The buyer reports a problem. The held money stays in HOLD until an analyst decides.",
+        "operationId": "create_dispute_api_disputes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDisputeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Dispute",
+        "tags": [
+          "disputes"
+        ]
+      }
+    },
+    "/api/disputes/{dispute_id}/analyze": {
+      "post": {
+        "description": "Run the evidence analyzer. It only suggests; it never moves money.",
+        "operationId": "analyze_dispute_api_disputes__dispute_id__analyze_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dispute_id",
+            "required": true,
+            "schema": {
+              "title": "Dispute Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze Dispute",
+        "tags": [
+          "disputes"
+        ]
+      }
+    },
+    "/api/disputes/{dispute_id}/buyer-evidence": {
+      "post": {
+        "description": "Extra evidence from the buyer, for example after an analyst asked for more.\n\nAn addition to the contract: without it a \"request more evidence\" decision would give the\nbuyer no way to answer.",
+        "operationId": "buyer_evidence_api_disputes__dispute_id__buyer_evidence_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dispute_id",
+            "required": true,
+            "schema": {
+              "title": "Dispute Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuyerEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Buyer Evidence",
+        "tags": [
+          "disputes"
+        ]
+      }
+    },
+    "/api/disputes/{dispute_id}/seller-response": {
+      "post": {
+        "operationId": "seller_response_api_disputes__dispute_id__seller_response_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dispute_id",
+            "required": true,
+            "schema": {
+              "title": "Dispute Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SellerResponseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Seller Response",
+        "tags": [
+          "disputes"
+        ]
+      }
+    },
+    "/api/metrics/summary": {
+      "get": {
+        "description": "Evaluation numbers exactly as the evaluation scripts wrote them.\n\n``summary`` is reports/summary.json (Step 12); until it exists the individual reports are\nstill returned under ``reports``. Nothing is computed here, so a missing number stays missing.",
+        "operationId": "metrics_summary_api_metrics_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Metrics Summary",
+        "tags": [
+          "metrics"
+        ]
+      }
+    },
+    "/api/orders": {
+      "post": {
+        "description": "Create a Safe Order and hold the money (simulated). The sandbox code is returned once.",
+        "operationId": "create_order_api_orders_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Order",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/orders/{order_id}": {
+      "get": {
+        "operationId": "get_order_api_orders__order_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "title": "Order Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Order",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/orders/{order_id}/confirm-delivery": {
+      "post": {
+        "description": "The buyer confirms with the delivery code. A wrong code changes nothing.",
+        "operationId": "confirm_delivery_api_orders__order_id__confirm_delivery_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "order_id",
+            "required": true,
+            "schema": {
+              "title": "Order Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmDeliveryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm Delivery",
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/sellers/search": {
+      "get": {
+        "description": "Find sellers by name or wallet number (an addition to the contract, used by the UI).",
+        "operationId": "search_sellers_api_sellers_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 40,
+              "minLength": 1,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SellerPublic"
+                  },
+                  "title": "Response Search Sellers Api Sellers Search Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Sellers",
+        "tags": [
+          "trust"
+        ]
+      }
+    },
+    "/api/sellers/{seller_id}/score-history": {
+      "get": {
+        "operationId": "score_history_api_sellers__seller_id__score_history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_id",
+            "required": true,
+            "schema": {
+              "title": "Seller Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreHistoryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Score History",
+        "tags": [
+          "trust"
+        ]
+      }
+    },
+    "/api/sim/advance-clock": {
+      "post": {
+        "description": "Move the simulated clock forward and fire timers (hold expiry, missed dispatch).",
+        "operationId": "advance_clock_api_sim_advance_clock_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvanceClockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClockOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Advance Clock",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/sim/courier-event": {
+      "post": {
+        "operationId": "courier_event_api_sim_courier_event_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourierEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Courier Event",
+        "tags": [
+          "demo"
+        ]
+      }
+    },
+    "/api/trust/check": {
+      "post": {
+        "description": "Trust Check for a seller. The first check also stores the INITIAL snapshot.",
+        "operationId": "trust_check_api_trust_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrustCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrustCheckResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Trust Check",
+        "tags": [
+          "trust"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Health Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  }
+}

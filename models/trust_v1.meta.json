@@ -47,6 +47,10 @@
     "pandas": "3.0.6",
     "scikit-learn": "1.9.1"
   },
+  "monotone_increasing_risk": [
+    "refund_rate",
+    "dispute_rate"
+  ],
   "note": "Trained on synthetic data only. Not validated on real data.",
   "seed": 42,
   "split": {
@@ -78,16 +82,16 @@
     "seed": 1001
   },
   "training": {
-    "best_iteration": 87,
+    "best_iteration": 85,
     "n_calibration": 600,
     "n_train": 1800,
     "n_validation": 600,
     "platt": {
-      "intercept": -0.029216616219894798,
-      "slope": 0.9541509407536192
+      "intercept": -0.03312470615913819,
+      "slope": 0.9628362592747427
     },
     "positive_rate_train": 0.2772222222222222,
-    "validation_pr_auc": 0.912200562265474
+    "validation_pr_auc": 0.9085577392775678
   },
   "version": "trust_v1"
 }
