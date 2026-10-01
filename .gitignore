@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.env
+data/safeorder.db
+data/synthetic/*
+!data/synthetic/.gitkeep
+node_modules/
+frontend/dist/

@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlmodel
+pydantic
+pandas
+numpy
+scikit-learn
+lightgbm
+joblib
+networkx
+pyyaml
+pytest
+ruff
+httpx

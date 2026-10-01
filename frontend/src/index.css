@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap");
+
+body {
+  font-family: "Noto Sans Bengali", system-ui, sans-serif;
+}

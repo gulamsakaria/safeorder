@@ -1,0 +1,42 @@
+# Every threshold and path lives here (BLUEPRINT.md Sections 4 and 6).
+# Starting values for the demo; none of them is a claim about upay policy.
+
+project:
+  name: SafeOrder
+  seed: 42
+  sandbox_banner_en: "Sandbox - synthetic data, no real money"
+  sandbox_banner_bn: "স্যান্ডবক্স - কৃত্রিম ডেটা, কোনো আসল টাকা নয়"
+
+paths:
+  database: data/safeorder.db
+  synthetic_dir: data/synthetic
+  cases_dir: data/cases
+  raw_dir: raw
+  models_dir: models
+  reports_dir: reports
+  docs_dir: docs
+
+rules:
+  hold_period_hours: 72          # hold after delivery
+  seller_response_deadline_hours: 48
+  dispatch_deadline_hours: 72    # seller never dispatches before this -> DISPUTABLE
+  max_appeals_per_party: 1
+  trust:
+    trusted_min: 70              # TRUSTED 70-100
+    caution_min: 40              # CAUTION 40-69, HIGH_RISK 0-39
+    limited_history_max_age_days: 14
+    limited_history_min_orders: 10
+    high_risk_requires_confirmation: true
+  routing:
+    min_class_probability: 0.80
+    high_amount_bdt: 5000
+    repeat_claimant_count: 3
+    repeat_claimant_window_days: 90
+    always_human_classes: [INSUFFICIENT_EVIDENCE]
+
+dispute:
+  model: baseline                # baseline | transformer (P1)
+
+api:
+  base_path: /api
+  cors_origins: ["http://localhost:5173"]
