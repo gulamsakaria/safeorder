@@ -5,6 +5,8 @@ export type Schemas = components['schemas']
 
 /** One switch decides the data source: VITE_USE_MOCK=true uses the in-browser mock server. */
 export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
+/** VITE_STATIC=true: no backend at all; the real models run in the browser (src/static). */
+export const STATIC = import.meta.env.VITE_STATIC === 'true'
 /** An empty VITE_API_BASE_URL means the API is served from the same address as the page. */
 export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 export const DEMO_CODE_KEY = 'safeorder.demoCode'
@@ -14,7 +16,8 @@ export const api = createClient<paths>({
   // The mock intercepts requests to this same origin, so no other code changes between modes.
   baseUrl: API_BASE_URL || globalThis.location?.origin || '',
   // Look fetch up at call time: a mock installed after this module loaded must still be hit.
-  fetch: (request) => globalThis.fetch(request),
+  fetch: async (request) =>
+    STATIC ? (await import('../static/fetch')).staticFetch(request) : globalThis.fetch(request),
 })
 
 // The sandbox controls may be protected by a demo code (set on the server); send it when present.

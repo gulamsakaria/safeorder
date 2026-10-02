@@ -94,9 +94,11 @@ def demo_script(f: Facts) -> str:
     return f"""# Demo script (about 6 minutes)
 
 {DRAFT}
-Before you start: open the link once a few minutes earlier (a free Space sleeps), open `/demo`, type
-the demo code, press **Load scenarios**. The cards on that page hold the links and ids for every
-scenario below, so you never type an id. Say "sandbox, synthetic data, simulated money" in the first
+Before you start: open the site, go to the demo page (add `/#/demo` to the address) and press
+**Load scenarios**. The cards on that page hold the links and ids for every scenario below, so you
+never type an id. The site is static (everything runs in the browser, nothing sleeps and no demo code
+is needed). If you use the Hugging Face Space instead, open it once a few minutes earlier (a free Space
+sleeps) and type its demo code on the demo page first. Say "sandbox, synthetic data, simulated money" in the first
 sentence, and point at the yellow banner.
 
 | # | Scenario | Do | Say | If it goes wrong |
@@ -216,7 +218,11 @@ def judge_questions(f: Facts) -> str:
         ),
         (
             "Is the live demo real?",
-            "The data is synthetic and the money simulated, but the code path is real: the same API, state machine, ledger, models and analyzer that the tests exercise. There is a rehearsal script that plays the scenarios three times.",
+            "The data is synthetic and the money simulated, but the models are the real trained ones. The static site runs them in the browser with no server: the trust model (tree ensemble with exact SHAP reasons), the dispute classifier and the analyzer are ported to TypeScript, and hundreds of parity tests check that every score, reason, flag and explanation equals the Python result on the same inputs.",
+        ),
+        (
+            "There is no server behind the page?",
+            "Right: the website is static files, so it can be hosted anywhere and nothing can sleep or fail on the network. The backend still exists in the repository (API, database, ledger, tests) and runs the same logic; the static site is a faithful offline copy for demonstration. State and the simulated clock are kept in the browser tab.",
         ),
     ]
     body = "\n\n".join(f"**{q}**\n\n{a}" for q, a in qa)

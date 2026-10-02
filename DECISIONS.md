@@ -516,3 +516,37 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
   three are fixed; the re-run gives 0 violations and no horizontal overflow (`scripts/a11y_check.mjs`).
   This is an automated check: it does not replace trying the screens with a screen reader or on a
   real phone.
+
+
+## Static website: the whole app in the browser (no backend)
+
+- **Why:** the team's hosting (cPanel) cannot run Python and the demo must be live, so the website had to
+  be only HTML, CSS and JavaScript. Calling a backend was impossible, so the *models* were ported instead
+  of mocked: `frontend/src/engine/` runs the trust model, the dispute classifier and the evidence analyzer
+  in the browser, and `frontend/src/static/` answers the same HTTP contract as the backend (so every
+  screen is unchanged). `make static-site` builds `site/` and `site.zip` (relative paths, hash routes, an
+  optional `.htaccess`): upload it to a sub-domain.
+- **What was ported (TypeScript):** LightGBM tree inference (missing values handled the LightGBM way),
+  exact tree SHAP for the reasons, Platt scaling, the score and bands, the reason texts; TF-IDF (word and
+  character n-grams) + logistic regression + sigmoid calibration; the injection screen, claim-type
+  detector, consistency flags, router, timeline and the Bangla/English explanations. The regular
+  expressions are exported from the Python modules (`engine/patterns.json`) and translated for Unicode
+  (Python's `\w`, which leaves out combining marks, and `\b` differ from JavaScript's), the weights from
+  the trained models, the thresholds from `config.yaml`. The seller table, the demo scenario picks and the
+  evaluation summary are exported by `scripts/export_static.py`.
+- **How it is known to be right:** `scripts/export_static.py` writes the inputs and the Python answers
+  for 130 sellers (margin, every SHAP contribution, probability, score, band, reasons), 122 texts
+  (probabilities), 114 disputes (flags, routing, timeline, probabilities, the full Bangla and English
+  explanations) and 51 injection texts; 417 vitest cases require identical results. They passed on the
+  first full run. The exporter also refuses to write the classifier if numpy cannot reproduce the
+  trained model from the exported numbers. 7 more tests cover the static API flows (search, trust check,
+  scenarios, refund and score change, hold release, a judge's own text). axe-core finds 0 accessibility
+  violations on all 18 screens in both languages at phone width, and Chromium made no request to any API.
+- **Limits:** the port matches Python on the fixtures; text with unusual characters (for example
+  characters outside the Basic Multilingual Plane, or Unicode digits other than Bengali and ASCII in
+  amounts) may differ in rare cases. State lives in one tab (session storage); there is no database,
+  sign-in, rate limit or audit log. The code, model weights and seller table are public to anyone with
+  the link, which is acceptable only because everything is synthetic; the blueprint's advice to keep
+  fraud-detection logic private until after the event still applies to the link itself.
+- The Python backend, its database, ledger and API stay the reference implementation (the rehearsal and
+  the backend tests run on it). The Hugging Face Space remains an alternative way to host the same app.

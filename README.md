@@ -33,7 +33,9 @@ make demo-reset      # reset the database and load the seven demo scenarios
 make rehearse        # three clean demo runs from a reset
 ```
 
-A live demo as one free Hugging Face Space (API + UI in one container): see RUNBOOK.md.
+A live demo needs no server: `make static-site` builds a static website (`site/`, `site.zip`) whose
+models run in the browser; upload it to any web host or a cPanel sub-domain (see RUNBOOK.md). A
+Hugging Face Space (API + UI in one container) is the alternative.
 
 ## Honest status
 

@@ -73,6 +73,8 @@ export const store = {
   analyses: new Map<string, Schemas['AnalysisOut']>(),
   decisions: new Map<string, Schemas['DecisionRecordOut'][]>(),
   snapshots: new Map<string, Schemas['SnapshotOut'][]>(),
+  /** Seller counters changed by resolved disputes (used by the static site's real trust model). */
+  counters: new Map<string, { orders_total: number; refund_count: number; dispute_count: number }>(),
   offsetMs: 0,
   orderSeq: 0,
   disputeSeq: 0,
@@ -92,6 +94,7 @@ export function persist(): void {
         analyses: [...store.analyses.entries()],
         decisions: [...store.decisions.entries()],
         snapshots: [...store.snapshots.entries()],
+        counters: [...store.counters.entries()],
         snapshotSeq: store.snapshotSeq,
         offsetMs: store.offsetMs,
         orderSeq: store.orderSeq,
@@ -113,6 +116,7 @@ function restore(): void {
     store.analyses = new Map(saved.analyses)
     store.decisions = new Map(saved.decisions)
     store.snapshots = new Map(saved.snapshots)
+    store.counters = new Map(saved.counters ?? [])
     store.snapshotSeq = saved.snapshotSeq
     store.offsetMs = saved.offsetMs
     store.orderSeq = saved.orderSeq
@@ -128,6 +132,7 @@ export function resetStore(): void {
   store.analyses.clear()
   store.decisions.clear()
   store.snapshots.clear()
+  store.counters.clear()
   store.snapshotSeq = 0
   store.offsetMs = 0
   store.orderSeq = 0

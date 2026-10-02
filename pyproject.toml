@@ -25,3 +25,4 @@ extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
 "backend/tests/test_dispute_model.py" = ["E501"]  # Bangla test texts
 "backend/tests/test_cases.py" = ["E501"]
 "scripts/build_pitch.py" = ["E501"]  # document text
+"scripts/export_static.py" = ["E501"]  # data export

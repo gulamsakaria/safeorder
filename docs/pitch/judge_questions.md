@@ -62,4 +62,8 @@ It may be wrong on unseen text: low confidence goes to a human, which is the des
 
 **Is the live demo real?**
 
-The data is synthetic and the money simulated, but the code path is real: the same API, state machine, ledger, models and analyzer that the tests exercise. There is a rehearsal script that plays the scenarios three times.
+The data is synthetic and the money simulated, but the models are the real trained ones. The static site runs them in the browser with no server: the trust model (tree ensemble with exact SHAP reasons), the dispute classifier and the analyzer are ported to TypeScript, and hundreds of parity tests check that every score, reason, flag and explanation equals the Python result on the same inputs.
+
+**There is no server behind the page?**
+
+Right: the website is static files, so it can be hosted anywhere and nothing can sleep or fail on the network. The backend still exists in the repository (API, database, ledger, tests) and runs the same logic; the static site is a faithful offline copy for demonstration. State and the simulated clock are kept in the browser tab.

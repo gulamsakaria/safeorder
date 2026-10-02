@@ -12,7 +12,8 @@
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dev:mock": "VITE_USE_MOCK=true vite"
+    "dev:mock": "VITE_USE_MOCK=true vite",
+    "build:static": "VITE_STATIC=true VITE_USE_MOCK=false VITE_API_BASE_URL= tsc -b && VITE_STATIC=true VITE_USE_MOCK=false VITE_API_BASE_URL= vite build --outDir ../site --emptyOutDir && rm -f ../site/mockServiceWorker.js"
   },
   "dependencies": {
     "openapi-fetch": "^0.17.0",

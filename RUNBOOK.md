@@ -48,6 +48,35 @@ To add the team's cases: drop `team_<SUBTYPE>.jsonl` (fields: BLUEPRINT.md Secti
 `team`) into `raw/`, run `make cases train-dispute eval docs`: they fill Test 2 and are reported
 separately. Read `raw/PROVENANCE.md` first.
 
+## Live website on your own sub-domain (cPanel, no Python needed)
+
+The whole app also exists as a **static website**: only HTML, CSS and JavaScript files. The trained
+models run in the browser, so there is no backend to host. The built site is in `site/` and packed
+in `site.zip` (both committed).
+
+1. Download `site.zip` from the GitHub repository (open the file, then **Download raw file**).
+2. cPanel -> **Domains / Subdomains**: create a sub-domain, for example `demo.your-domain.com`. Note the
+   document root folder it gets (for example `public_html/demo`).
+3. cPanel -> **File Manager** -> open that folder -> **Upload** `site.zip` -> right-click it -> **Extract**.
+   `index.html` must sit directly in that folder (not in a sub-folder). In File Manager's **Settings**
+   switch on "Show hidden files" to see `.htaccess`.
+4. Open `https://demo.your-domain.com`. Turn on AutoSSL in cPanel if the page is not https.
+5. Press **Demo** in the menu, then **Load scenarios**; follow `docs/pitch/demo_script.md`.
+
+If you see a blank page: open the browser console (F12). A 404 for `assets/...` or `engine/...` means the
+files were extracted into a sub-folder; move them up. The site does not work when opened as a local
+file (`file://`): it needs a web address.
+
+Rebuild after any change (needs Node 20+ and the Python environment):
+`make eval && make static-site`, then upload the new `site.zip`. Everything the browser needs (models, seller
+table, thresholds, evaluation summary) is regenerated from the trained models and reports by
+`make static-data`.
+
+What the static site is: the same screens and the same trained models and rules, ported to
+TypeScript and checked against the Python code (see DECISIONS.md). State (orders, disputes, the simulated
+clock) lives in the browser tab; there is no database and no sign-in. Everything it needs, including the model
+weights, is downloadable by anyone who has the link: share the link with the judges and the team only.
+
 ## Live demo on Hugging Face (free Space)
 
 One container serves the API and the frontend on one address. Do this on your own computer, where
