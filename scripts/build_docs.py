@@ -46,6 +46,10 @@ def get(node: Any, *path: str) -> Any:
     return node
 
 
+def plain(counts: dict[str, Any]) -> str:
+    return ", ".join(f"{k}: {v}" for k, v in counts.items())
+
+
 def table(head: list[str], rows: list[list[str]]) -> str:
     lines = ["| " + " | ".join(head) + " |", "|" + "|".join("---" for _ in head) + "|"]
     lines += ["| " + " | ".join(row) + " |" for row in rows]
@@ -286,6 +290,246 @@ generated once it exists. Until then no dispute-classifier number appears anywhe
 """
 
 
+# ---- dispute classifier documents -------------------------------------------------------------
+
+
+def dispute_model_card(cfg: dict[str, Any]) -> str:
+    report = load("dispute_eval_baseline.json")
+    meta_path = REPO / "models" / "dispute_baseline_v1.meta.json"
+    if report is None or not meta_path.exists():
+        raise SystemExit("dispute report/model missing: run `make cases train-dispute eval` first")
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    splits, routing, inj = report["splits"], report["routing"], report["injection"]
+    rows = []
+    for name in ("validation", "test1", "test2"):
+        s = splits[name]
+        rows.append(
+            [
+                name,
+                str(s["n"]),
+                str(s["distinct_stories"]),
+                num(s["macro_f1"]),
+                pct(s["accuracy"]),
+                pct(s["wrong_refund_rate"]),
+                pct(s["wrong_rejection_rate"]),
+                num(s["calibration_ece"]),
+                num(s["story_level"]["macro_f1"]),
+            ]
+        )
+    summary = table(
+        [
+            "Split",
+            "Cases",
+            "Distinct stories",
+            "Macro-F1",
+            "Accuracy",
+            "Wrong-refund rate",
+            "Wrong-rejection rate",
+            "ECE",
+            "Macro-F1 (one case per story)",
+        ],
+        rows,
+    )
+    classes = list(splits["test1"]["per_class"])
+    per_class = table(
+        [
+            "Class",
+            "Precision (test 1)",
+            "Recall (test 1)",
+            "F1 (test 1)",
+            "Precision (test 2)",
+            "Recall (test 2)",
+            "F1 (test 2)",
+        ],
+        [
+            [
+                c,
+                *[
+                    num(splits[s]["per_class"][c][k], 2)
+                    for s in ("test1", "test2")
+                    for k in ("precision", "recall", "f1")
+                ],
+            ]
+            for c in classes
+        ],
+    )
+    route_rows = [
+        [
+            name,
+            pct(r["fast_lane_share"]),
+            pct(r["fast_lane_accuracy"]),
+            str(r["fast_lane_wrong_refunds"]),
+            pct(r["human_review_share"]),
+        ]
+        for name, r in routing.items()
+    ]
+    routes = table(
+        [
+            "Split",
+            "Sent to fast lane",
+            "Fast-lane accuracy",
+            "Fast-lane wrong refunds",
+            "Sent to a human",
+        ],
+        route_rows,
+    )
+    lat = report["latency"]
+    return f"""# Model card: dispute classifier `{meta["version"]}`
+
+{BANNER}
+## Purpose and intended use
+
+Reads one dispute (courier status, whether the delivery code was used, an amount band, and four
+short texts: the buyer's claim, the seller's response, each side's evidence description) and gives
+**probabilities for four classes**: SELLER_FAULT, BUYER_FALSE_CLAIM, COURIER_ISSUE and
+INSUFFICIENT_EVIDENCE. The evidence analyzer turns them into a *suggestion* for a human analyst
+and a route (fast lane or human review). **It never decides and never moves money.**
+
+**Out of scope:** deciding disputes, any use on real people, real money or real disputes without a
+new validation on governed data.
+
+## Model
+
+- TF-IDF (word 1-2 grams and character 2-5 grams) + class-balanced logistic regression, sigmoid
+  calibration fitted on the validation split. No generative model, no embeddings.
+- Hyperparameters: {", ".join(f"`{k}={v}`" for k, v in sorted(meta["hyperparameters"].items()))}.
+- Input text: `[COURIER=..] [CODE=..] [AMOUNT_BAND=..] BUYER: .. SELLER: .. BUYER_EVIDENCE: .. SELLER_EVIDENCE: ..`
+  (`backend/app/disputes/text_format.py`). Instruction-like sentences are removed first by the
+  injection screen (see the responsible-AI note for how far that goes).
+- Libraries: {", ".join(f"{k} {v}" for k, v in sorted(meta["libraries"].items()))}; trained {meta["trained_at"]}.
+- Speed: p95 {lat["p95_ms"]:.1f} ms, max {lat["max_ms"]:.1f} ms per prediction (budget {lat["budget_ms"]} ms).
+
+## Training data
+
+See `dataset_card_dispute_cases.md`. Train: {meta["trained_on"]["train"]["rows"]} cases; validation
+(calibration): {meta["trained_on"]["validation"]["rows"]} cases. **All cases were written by the AI
+assistant that built this repository, not by ChatGPT, Gemini or the team.**
+
+## Evaluation (read this before quoting any number)
+
+{summary}
+
+- **One author for every split.** Train, validation, Test 1 and Test 2 were all written by the same
+  assistant. The splits guarantee that no claim text and no combination of source texts used in a
+  test appears in training, so the numbers show how the model handles wording it has not seen. They do
+  **not** show how it handles cases written by other people, other styles or real disputes, and
+  they are likely to be optimistic for that purpose.
+- **Few distinct stories in the test sets.** The test texts are drawn from a small held-out pool,
+  so many cases repeat the same story with different product names and amounts: see "Distinct
+  stories" and the last column, which scores one case per story.
+- Validation was used to fit the calibration, so its row is not an honest test.
+- Nothing was tuned on Test 1 or Test 2.
+- Definitions: *wrong-refund rate* = share of true BUYER_FALSE_CLAIM cases predicted SELLER_FAULT or
+  COURIER_ISSUE (a refund would be suggested); *wrong-rejection rate* = share of true SELLER_FAULT
+  or COURIER_ISSUE cases predicted BUYER_FALSE_CLAIM (a rejection would be suggested). These errors
+  matter because a human analyst has to catch them.
+
+Per class:
+
+{per_class}
+
+## Routing through the full analyzer
+
+The analyzer applies rules to the probabilities, the flags and the amount. A case goes to the fast
+lane only if the model is confident, the amount is low, no flag fired and no injection was found;
+the fast lane still needs a human click. The case records carry no dispute history, so
+REPEAT_CLAIMANT never fires here.
+
+{routes}
+
+## Prompt injection
+
+{inj["screen_detected"]} of {inj["n"]} injected cases had their instruction sentence detected by the
+screen. Compared with its twin (the same case without the sentence), the recommendation changed in
+{inj["pipeline_recommendation_changed"]} cases; {inj["human_review_forced"]} of {inj["n"]} were
+sent to a human. A sentence the screen misses reaches the model as ordinary words, and can move a
+bag-of-words model only through those words. Details: `reports/dispute_eval_baseline.json`.
+
+## Limitations
+
+- Synthetic, single-author data; not validated on real data; real disputes are messier, longer and
+  use other words (and the Bangla, especially the "regional" style, needs native review).
+- The test sets hold few distinct stories (see above), so the numbers have wide uncertainty.
+- INSUFFICIENT_EVIDENCE is the hardest class (see the confusion matrix in
+  `reports/figures/dispute_confusion_test1.png`): the model often mixes it with the faults, which
+  is why low confidence goes to a human.
+- Evidence is text only: there is no image or video analysis.
+"""
+
+
+def dispute_dataset_card(cfg: dict[str, Any]) -> str:
+    stats, splits = load("dispute_cases_stats.json"), load("dispute_cases_splits.json")
+    if stats is None or splits is None:
+        raise SystemExit("case reports missing: run `make cases` first")
+    rows = []
+    for name, info in splits["splits"].items():
+        rows.append(
+            [
+                name,
+                str(info["n"]),
+                str(info["batches"]),
+                str(info["distinct_stories"]),
+                ", ".join(f"{k}: {v}" for k, v in info["by_source"].items()),
+            ]
+        )
+    return f"""# Dataset card: dispute cases
+
+{BANNER}
+## Source, stated plainly
+
+**Every case was written by the AI assistant (Claude) that built this repository** from the bank in
+`scripts/case_bank/` and combined with seeded random choices by `scripts/make_cases.py`. The cases were
+**not** generated by ChatGPT or Gemini and **not** written by the team; no real person's text, chat,
+name, phone number or brand was used. Provenance for every file is in `raw/PROVENANCE.md`. The
+blueprint's cross-source design (ChatGPT trains, Gemini tests, team-written cases are the cleanest
+test) is therefore **not** reproduced: all splits share one author.
+
+Files from other sources (`chatgpt`, `gemini`, `team`) can be added to `raw/`; `dispute.cases.roles`
+in `config/config.yaml` says which split each source fills, and the evaluation reports them per source.
+
+## Content
+
+Four labels with four sub-types each (BLUEPRINT.md Section 8.3), Bangla in four styles (standard,
+Banglish, regional, mixed), eight product categories, amounts in taka, courier status and whether
+the delivery code was used. {stats["kept"]} cases kept out of {stats["read"]} read; dropped:
+{plain(stats["dropped"]) or "none"} (the dropped ones are repeated text combinations).
+
+Per label: {plain(stats["by_label"])}.
+Per language style: {plain(stats["by_language_style"])}.
+Per sub-type: {plain(stats["by_subtype"])}.
+
+## Splits
+
+{table(["Split", "Cases", "Batches", "Distinct stories", "Sources"], rows)}
+
+- Split by source and batch, never by random row. A test claim text never appears in training (the
+  split script removes shared claims and fails if any remain) and no combination of source texts is
+  shared between splits (`story_key`). The injection set holds test-style cases with an added
+  instruction sentence; it is never trained on and shares no claim text with train or validation.
+- **A distinct story is one combination of a claim wording and the three other texts.** The
+  held-out pools are small, so test sets repeat stories with different product names and amounts:
+  the number of distinct stories is far smaller than the number of cases (table above).
+- Cases are made realistic with ambiguity on purpose: the same "I did not receive it" wording is
+  used by sellers' faults, false claims, courier problems and unclear cases, so the other fields
+  must decide. About 10% of seller responses or evidence texts are blank.
+
+## Review
+
+**No human has reviewed these cases.** The blueprint asks the team to read about 10% and delete wrong
+or unrealistic ones and to record the share deleted: this has not happened (`manual_review.done =
+false` in `reports/dispute_cases_stats.json`). The Bangla, especially the regional style, was
+written by an AI and needs a native speaker's review.
+
+## Known limitations
+
+- One author, so the dataset has one voice; real users write differently, and longer.
+- The texts follow templates written for each sub-type: a model can learn the templates.
+- Not validated on real data; no real disputes were used.
+- Using the assistant's own writing as training data for a model: the licence register lists the
+  terms question to confirm.
+"""
+
+
 # ---- evaluation protocol ----------------------------------------------------------------------
 
 
@@ -343,10 +587,26 @@ def evaluation_protocol(cfg: dict[str, Any]) -> str:
 
 ## Dispute classifier and routing
 
-{NOT_MEASURED}: no cases yet (Step 5 and 6). When they exist the protocol is: split **by batch**
-so near-duplicates cannot cross the train/test boundary; a separate injection set; no tuning on the
-final test split; report macro-F1, per-class precision and recall, confusion matrices, the
-wrong-refund and wrong-rejection rates and the routing coverage.
+1. **Data:** assistant-written cases (see the dataset card); every split has the same author.
+2. **Splits:** by source and batch. Train = `claude_a` batches; validation = its `_val` batches
+   (used only to fit the probability calibration); Test 1 = `claude_b`; Test 2 = `claude_c`; the
+   injection set = `claude_inj`. Cases from `chatgpt`, `gemini` and `team` sources would fill the same
+   roles (`dispute.cases.roles`). A claim text or a story (combination of source texts) never appears
+   in two of train, validation, Test 1 and Test 2; the split script enforces it and tests check it.
+3. **No tuning on test:** the hyperparameters in the config were set once, before the first
+   evaluation, and not changed afterwards. Calibration (sigmoid) was chosen by the specification, and
+   the uncalibrated model is not used.
+4. **Metrics:** macro-F1 and accuracy; per-class precision, recall and F1; confusion matrices;
+   the wrong-refund and wrong-rejection rates (definitions in the model card); top-label calibration
+   error and log-loss; each of these per source and per language style; and again on one case per
+   distinct story, because the held-out pools are small and the same story repeats.
+5. **Routing:** every test case is run through the real analyzer; the report gives the fast-lane
+   share, its accuracy and its wrong refunds, and the reasons for human review.
+6. **Injection:** each injected case is compared with its twin (same case without the sentence).
+7. **Speed:** 300 timed predictions against a 100 ms budget.
+8. **What this cannot tell:** how the model does on text written by other people or on real
+   disputes. That needs the team's own cases (source `team`) and, in the end, governed real data.
+
 {inj_text}
 ## Analyst time study
 
@@ -370,6 +630,16 @@ def responsible_ai(cfg: dict[str, Any]) -> str:
     literal = get(policies, "blueprint_literal", "recall_high_risk_overall")
     override = get(policies, "override_default", "recall_high_risk_overall")
     untuned = get(inj, "untuned_screen")
+    dispute = load("dispute_eval_baseline.json")
+    dispute_line = (
+        f" On held-out cases written by the same assistant that wrote the training cases, "
+        f"the dispute classifier would suggest a refund for {pct(get(dispute, 'splits', 'test1', 'wrong_refund_rate'))} "
+        f"(test 1) and {pct(get(dispute, 'splits', 'test2', 'wrong_refund_rate'))} (test 2) of false "
+        "claims, which is exactly why a person checks every case. These numbers come from one author "
+        "and say little about real disputes."
+        if dispute
+        else ""
+    )
     injection_line = (
         f"The pattern screen caught {untuned['detected']} of {untuned['phrases']} injection phrases "
         "written after it was built (and all of those it was built on): it is a first filter, "
@@ -406,7 +676,7 @@ Inputs have length limits and are validated.
 
 **Human oversight.** The analyzer only *suggests*. A person decides every dispute, must write a
 note, and confirms any money movement. Low confidence, high amounts, any flag, or insufficient
-evidence send a case to a human; the fast lane only pre-fills a confirm button and is never automatic.
+evidence send a case to a human; the fast lane only pre-fills a confirm button and is never automatic.{dispute_line}
 Seller trust scores update only after a human decision.
 
 **Limits to state out loud.** Everything is synthetic and not validated on real data; the Bangla
@@ -493,15 +763,16 @@ the obligations.
 | Base language models | none used so far | The optional transformer (Step 13) is not started. Some Bangla models are non-commercial: check before use. |
 | Public datasets | none used | none |
 | Synthetic seller data | generated by our own script | ours (the team decides); contains nothing real |
-| Dispute case files | not available yet | will depend on the terms of the tool used to draft them: **to confirm** (see below) |
+| Dispute case files | written by the Claude assistant (`raw/PROVENANCE.md`) | ours to decide; whether the assistant's terms allow training even a small classifier on its output is **to confirm** (see below) |
 | Noto Sans Bengali font | loaded from Google Fonts in the browser | to confirm; the sandbox falls back to system fonts if blocked |
 | Kaggle private dataset and notebook | storage and demo copy | private; Kaggle's terms apply |
 
 ## Open questions that a human must settle
 
-- **LLM terms of use:** whether the current terms of ChatGPT, Gemini or any other tool allow using
-  their outputs to train another model. Not checked. Required before dispute cases generated with
-  them are used for training.
+- **LLM terms of use:** whether the current terms of the tool that wrote the cases (the Claude
+  assistant here; ChatGPT or Gemini if the team adds their cases) allow using its output to train
+  another model, even a small TF-IDF classifier. Not checked. A person must read the terms and record
+  the conclusion.
 - **Our own licence:** the repository has no licence file yet; until the team and any organiser
   rules decide, all rights are reserved by default.
 """
@@ -515,8 +786,12 @@ def index(done: dict[str, bool]) -> str:
         ["Evaluation protocol", "`evaluation_protocol.md`", "generated"],
         ["Responsible AI note", "`responsible_ai.md`", "generated"],
         ["Licence register", "`licence_register.md`", "generated; open questions listed inside"],
-        ["Model card (dispute classifier)", "-", "not started: needs the dispute cases (Step 5-6)"],
-        ["Dataset card (dispute cases)", "-", "not started: needs the dispute cases (Step 5)"],
+        ["Model card (dispute classifier)", "`model_card_dispute_classifier.md`", "generated"],
+        [
+            "Dataset card (dispute cases)",
+            "`dataset_card_dispute_cases.md`",
+            "generated; the cases are assistant-written and unreviewed",
+        ],
         ["API contract", "`openapi.json`", "generated by `make openapi`"],
         ["Time study template", "`time_study_template.json`", "template; the team fills it in"],
         [
@@ -542,6 +817,8 @@ def main() -> None:
         "dataset_card_synthetic_sellers.md": dataset_card(),
         "evaluation_protocol.md": evaluation_protocol(cfg),
         "responsible_ai.md": responsible_ai(cfg),
+        "model_card_dispute_classifier.md": dispute_model_card(cfg),
+        "dataset_card_dispute_cases.md": dispute_dataset_card(cfg),
         "licence_register.md": licence_register(),
     }
     for name, text in outputs.items():

@@ -1,14 +1,13 @@
 """Rehearse the demo script (BLUEPRINT.md Section 12.2) from a clean reset, several times.
 
 Usage (repository root): PYTHONPATH=backend:. python -m scripts.demo_rehearsal [--runs 3]
-Needs `make data` and `make train`. Every run uses a fresh database and a reset clock, loads the
-demo scenarios through POST /api/demo/reset, plays scenarios 1 to 6 through the real API, and
+(add --stand-in for a fixed stand-in classifier). Needs `make data train cases train-dispute`.
+Every run uses a fresh database and a reset clock, loads the
+demo scenarios through POST /api/demo/reset, plays scenarios 1 to 7 through the real API, and
 checks the end state. The runs must give identical results. Exit status 1 on any failure.
 
-**Stand-in classifier:** the dispute classifier is not trained yet (Step 6), so the analyzer runs
-with a fixed stand-in that always answers the same probabilities. It only lets the rule-based
-parts (flags, routing, injection screen, ledger, trust feedback) be rehearsed; it says nothing about
-classification quality. Scenario 7 (judge case) needs the real classifier and is not rehearsed.
+By default the analyzer uses the real trained dispute classifier. ``--stand-in`` swaps in a fixed
+stand-in that always answers the same probabilities, to rehearse only the rule-based parts.
 """
 
 import argparse
@@ -51,7 +50,7 @@ def check(condition: bool, message: str) -> None:
         raise RehearsalError(message)
 
 
-def run_once(directory: Path) -> dict[str, Any]:
+def run_once(directory: Path, stand_in: bool) -> dict[str, Any]:
     cfg = copy.deepcopy(load_config())
     cfg["api"]["rate_limit_per_minute"] = 0  # a rehearsal is fast; the limit has its own tests
     clock.reset()
@@ -60,7 +59,8 @@ def run_once(directory: Path) -> dict[str, Any]:
     model = TrustModel.load(
         REPO / cfg["paths"]["models_dir"] / f"{cfg['trust_model']['version']}.joblib"
     )
-    client = TestClient(create_app(engine, model, StandInClassifier(), cfg))
+    classifier = StandInClassifier() if stand_in else clf.load_classifier()
+    client = TestClient(create_app(engine, model, classifier, cfg))
 
     def call(method: str, path: str, body: dict | None = None) -> dict[str, Any]:
         response = client.request(method, f"/api{path}", json=body)
@@ -131,9 +131,21 @@ def run_once(directory: Path) -> dict[str, Any]:
     )
     result["6"] = [injection["flags"], injection["route"]]
 
+    judge = s["judge_case"]
+    claim = "পণ্য এখনো হাতে পাইনি, কুরিয়ার কিছু বলছে না।"
+    filed = call(
+        "POST",
+        "/disputes",
+        {"order_id": judge["order_id"], "claim_text": claim, "evidence_text": ""},
+    )
+    typed = call("POST", f"/disputes/{filed['id']}/analyze")
+    check(abs(sum(typed["class_probs"].values()) - 1.0) < 1e-6, "7: probabilities must sum to 1")
+    check(typed["route"] in ("HUMAN_REVIEW", "FAST_LANE_CONFIRM"), "7: no route")
+    result["7"] = [typed["recommendation"], typed["route"]]
+
     queue = call("GET", "/analyst/queue")
     result["queue"] = sorted(item["dispute_id"] for item in queue)
-    check(len(queue) == 1, "only the injection case should still wait")
+    check(len(queue) == 2, "only the injection case and the judge's case should still wait")
     clock.reset()
     return result
 
@@ -141,17 +153,19 @@ def run_once(directory: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--runs", type=int, default=3)
+    parser.add_argument("--stand-in", action="store_true", help="use a fixed stand-in classifier")
     args = parser.parse_args()
-    print("NOTE: stand-in classifier (not a trained model); scenario 7 is not rehearsed.")
+    if args.stand_in:
+        print("NOTE: stand-in classifier (not a trained model)")
     results = []
     for number in range(1, args.runs + 1):
         with tempfile.TemporaryDirectory() as tmp:
             try:
-                results.append(run_once(Path(tmp)))
+                results.append(run_once(Path(tmp), args.stand_in))
             except (RehearsalError, FileNotFoundError) as error:
                 print(f"run {number}: FAILED: {error}")
                 return 1
-        print(f"run {number}: scenarios 1-6 passed")
+        print(f"run {number}: scenarios 1-7 passed")
     if any(r != results[0] for r in results[1:]):
         print("FAILED: the runs did not give identical results")
         return 1

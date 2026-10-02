@@ -41,6 +41,27 @@ rules:
 
 dispute:
   model: baseline                # baseline | transformer (P1)
+  cases:
+    raw_dir: raw
+    out_dir: data/cases
+    # Which sources fill which split. A source is the `source` field of a record
+    # (a raw file is one batch). A source that is not listed stops the split script.
+    # claude_* are written by the assistant (see raw/PROVENANCE.md); chatgpt, gemini and team are
+    # for the files the team may add later.
+    roles:
+      train: [chatgpt, claude_a]
+      test1: [gemini, claude_b]
+      test2: [team, claude_c]
+      injection: [claude_inj]
+    validation_batch_suffix: _val    # batches named ..._val are the validation split
+  baseline:
+    seed: 42
+    word_ngrams: [1, 2]
+    char_ngrams: [2, 5]
+    max_features_word: 20000
+    max_features_char: 40000
+    C: 3.0
+    latency_budget_ms: 100
 
 api:
   base_path: /api

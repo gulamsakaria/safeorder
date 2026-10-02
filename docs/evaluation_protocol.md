@@ -34,10 +34,26 @@
 
 ## Dispute classifier and routing
 
-not measured: no cases yet (Step 5 and 6). When they exist the protocol is: split **by batch**
-so near-duplicates cannot cross the train/test boundary; a separate injection set; no tuning on the
-final test split; report macro-F1, per-class precision and recall, confusion matrices, the
-wrong-refund and wrong-rejection rates and the routing coverage.
+1. **Data:** assistant-written cases (see the dataset card); every split has the same author.
+2. **Splits:** by source and batch. Train = `claude_a` batches; validation = its `_val` batches
+   (used only to fit the probability calibration); Test 1 = `claude_b`; Test 2 = `claude_c`; the
+   injection set = `claude_inj`. Cases from `chatgpt`, `gemini` and `team` sources would fill the same
+   roles (`dispute.cases.roles`). A claim text or a story (combination of source texts) never appears
+   in two of train, validation, Test 1 and Test 2; the split script enforces it and tests check it.
+3. **No tuning on test:** the hyperparameters in the config were set once, before the first
+   evaluation, and not changed afterwards. Calibration (sigmoid) was chosen by the specification, and
+   the uncalibrated model is not used.
+4. **Metrics:** macro-F1 and accuracy; per-class precision, recall and F1; confusion matrices;
+   the wrong-refund and wrong-rejection rates (definitions in the model card); top-label calibration
+   error and log-loss; each of these per source and per language style; and again on one case per
+   distinct story, because the held-out pools are small and the same story repeats.
+5. **Routing:** every test case is run through the real analyzer; the report gives the fast-lane
+   share, its accuracy and its wrong refunds, and the reasons for human review.
+6. **Injection:** each injected case is compared with its twin (same case without the sentence).
+7. **Speed:** 300 timed predictions against a 100 ms budget.
+8. **What this cannot tell:** how the model does on text written by other people or on real
+   disputes. That needs the team's own cases (source `team`) and, in the end, governed real data.
+
 
 ## Injection checks
 

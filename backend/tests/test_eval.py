@@ -40,10 +40,19 @@ def test_numbers_are_copied_not_recomputed() -> None:
     assert summary["trust"]["latency"] == trust["latency"]
 
 
-def test_dispute_and_routing_stay_not_measured_without_a_classifier() -> None:
-    summary = build_summary(real_reports())
+def test_dispute_and_routing_are_not_measured_without_the_dispute_report() -> None:
+    summary = build_summary({**real_reports(), "dispute_eval_baseline": None})
     assert summary["dispute_classifier"]["status"] == "not_measured"
     assert summary["routing"]["status"] == "not_measured"
+
+
+def test_dispute_numbers_are_copied_from_the_report() -> None:
+    reports = real_reports()
+    if reports["dispute_eval_baseline"] is None:
+        pytest.skip("run `make cases train-dispute eval` first")
+    summary = build_summary(reports)
+    assert summary["dispute_classifier"]["baseline"] == reports["dispute_eval_baseline"]
+    assert summary["routing"]["test1"] == reports["dispute_eval_baseline"]["routing"]["test1"]
 
 
 def test_injection_screen_regression_phrases() -> None:

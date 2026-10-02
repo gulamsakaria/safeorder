@@ -30,7 +30,7 @@ Inputs have length limits and are validated.
 
 **Human oversight.** The analyzer only *suggests*. A person decides every dispute, must write a
 note, and confirms any money movement. Low confidence, high amounts, any flag, or insufficient
-evidence send a case to a human; the fast lane only pre-fills a confirm button and is never automatic.
+evidence send a case to a human; the fast lane only pre-fills a confirm button and is never automatic. On held-out cases written by the same assistant that wrote the training cases, the dispute classifier would suggest a refund for 5.3% (test 1) and 8.5% (test 2) of false claims, which is exactly why a person checks every case. These numbers come from one author and say little about real disputes.
 Seller trust scores update only after a human decision.
 
 **Limits to state out loud.** Everything is synthetic and not validated on real data; the Bangla

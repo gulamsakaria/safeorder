@@ -467,7 +467,12 @@ def test_seller_cannot_respond_after_the_deadline(api: Api) -> None:
     assert late.json()["error"]["code"] == "DEADLINE_PASSED"
 
 
-def test_analyze_without_a_trained_classifier_fails_cleanly(api: Api) -> None:
+def test_analyze_without_a_trained_classifier_fails_cleanly(
+    api: Api, tmp_path, monkeypatch
+) -> None:
+    from app.disputes import classifier as clf_module
+
+    monkeypatch.setattr(clf_module, "model_path", lambda cfg=None: tmp_path / "missing.joblib")
     api.app.state.classifier = None
     order = place_order(api)
     deliver(api, order)

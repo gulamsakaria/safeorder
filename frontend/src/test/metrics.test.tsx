@@ -33,10 +33,30 @@ describe('metrics page', () => {
     expect(fairness.getByText(bn(`${(literal * 100).toFixed(1)}%`))).toBeInTheDocument()
   })
 
+  it('shows the dispute classifier numbers exactly, with the one-author caveat', async () => {
+    serve(SUMMARY)
+    renderApp('/metrics', 'bn')
+    const table = within(await screen.findByRole('table', { name: 'অভিযোগ শ্রেণিবিন্যাস ও রুটিং' }))
+    const test1 = SUMMARY.dispute_classifier.baseline.splits.test1
+    expect(table.getByText(bn(test1.macro_f1.toFixed(3)))).toBeInTheDocument()
+    expect(table.getByText(bn(`${(test1.wrong_refund_rate * 100).toFixed(1)}%`))).toBeInTheDocument()
+    expect(screen.getByText(/সব স্প্লিটের লেখক একজন/)).toBeInTheDocument()
+  })
+
+  it('says "not measured" for the dispute sections when their reports are missing', async () => {
+    const partial = structuredClone(SUMMARY)
+    partial.dispute_classifier = { status: 'not_measured', reason: 'no model' }
+    partial.routing = { status: 'not_measured', reason: 'no model' }
+    serve(partial)
+    renderApp('/metrics', 'en')
+    expect(await screen.findByTestId('not-measured-dispute_classifier')).toHaveTextContent('not measured')
+    expect(screen.getByTestId('not-measured-routing')).toHaveTextContent('not measured')
+  })
+
   it('says "not measured" for sections without a report, with the reason', async () => {
     serve(SUMMARY)
     renderApp('/metrics', 'en')
-    for (const section of ['dispute_classifier', 'routing', 'time_study']) {
+    for (const section of ['time_study']) {
       const box = await screen.findByTestId(`not-measured-${section}`)
       expect(box).toHaveTextContent('not measured')
       expect(box).toHaveTextContent(SUMMARY[section].reason)

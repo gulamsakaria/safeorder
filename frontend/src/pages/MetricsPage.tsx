@@ -187,10 +187,64 @@ export function MetricsPage() {
       </Section>
 
       <Section title={t('metrics.dispute')}>
-        {notMeasured('dispute_classifier') ? absent('dispute_classifier') : (
-          <p className="text-sm">{t('metrics.dispute.see_report')}</p>
+        {notMeasured('dispute_classifier') ? (
+          absent('dispute_classifier')
+        ) : (
+          <>
+            <p className="text-sm text-slate-600">{t('metrics.dispute.about')}</p>
+            <Table
+              label={t('metrics.dispute')}
+              head={[
+                t('metrics.split'),
+                t('metrics.cases'),
+                t('metrics.stories'),
+                t('metrics.macro_f1'),
+                t('metrics.accuracy'),
+                t('metrics.wrong_refund'),
+                t('metrics.wrong_rejection'),
+                t('metrics.ece'),
+              ]}
+              rows={(['validation', 'test1', 'test2'] as const).map((split) => {
+                const base = `dispute_classifier.baseline.splits.${split}`
+                return [
+                  t(`metrics.split.${split}`),
+                  cnt(n(`${base}.n`)),
+                  cnt(n(`${base}.distinct_stories`)),
+                  dec(n(`${base}.macro_f1`)),
+                  pct(n(`${base}.accuracy`)),
+                  pct(n(`${base}.wrong_refund_rate`)),
+                  pct(n(`${base}.wrong_rejection_rate`)),
+                  dec(n(`${base}.calibration_ece`)),
+                ]
+              })}
+            />
+            <p className="text-sm text-slate-600">{t('metrics.dispute.latency', { ms: ms(n('dispute_classifier.baseline.latency.p95_ms')) })}</p>
+          </>
         )}
-        {notMeasured('routing') && absent('routing')}
+        {notMeasured('routing') ? (
+          absent('routing')
+        ) : (
+          <>
+            <h4 className="font-semibold">{t('metrics.routing')}</h4>
+            <Table
+              label={t('metrics.routing')}
+              head={[
+                t('metrics.split'),
+                t('metrics.fast_share'),
+                t('metrics.fast_accuracy'),
+                t('metrics.fast_wrong_refunds'),
+                t('metrics.human_share'),
+              ]}
+              rows={(['test1', 'test2'] as const).map((split) => [
+                t(`metrics.split.${split}`),
+                pct(n(`routing.${split}.fast_lane_share`)),
+                pct(n(`routing.${split}.fast_lane_accuracy`)),
+                cnt(n(`routing.${split}.fast_lane_wrong_refunds`)),
+                pct(n(`routing.${split}.human_review_share`)),
+              ])}
+            />
+          </>
+        )}
       </Section>
 
       <Section title={t('metrics.injection')}>
@@ -208,6 +262,12 @@ export function MetricsPage() {
                 [t('metrics.inj.false_alarms'), `${cnt(n('injection.screen.false_alarms'))} / ${cnt(n('injection.screen.harmless_phrases'))}`],
                 [t('metrics.inj.pairs'), cnt(n('injection.invariance.pairs_checked'))],
                 [t('metrics.inj.changed'), cnt(n('injection.invariance.probabilities_changed'))],
+                [
+                  t('metrics.inj.cls_cases'),
+                  `${cnt(n('dispute_classifier.baseline.injection.screen_detected'))} / ${cnt(n('dispute_classifier.baseline.injection.n'))}`,
+                ],
+                [t('metrics.inj.cls_changed'), cnt(n('dispute_classifier.baseline.injection.pipeline_recommendation_changed'))],
+                [t('metrics.inj.cls_human'), cnt(n('dispute_classifier.baseline.injection.human_review_forced'))],
                 [t('metrics.inj.held_out'), na],
               ]}
             />

@@ -83,6 +83,69 @@ def policy_recall(summary: dict[str, Any], out: Path) -> Path:
     return _save(fig, out / "policy_recall.png")
 
 
+def dispute_f1(summary: dict[str, Any], out: Path) -> Path:
+    splits = summary["dispute_classifier"]["baseline"]["splits"]
+    names = [n for n in ("validation", "test1", "test2") if n in splits]
+    labels = {
+        "validation": "Validation\n(used for calibration)",
+        "test1": "Test 1",
+        "test2": "Test 2",
+    }
+    fig, ax = plt.subplots(figsize=(6.4, 3.8))
+    width = 0.36
+    for i, name in enumerate(names):
+        every, story = splits[name]["macro_f1"], splits[name]["story_level"]["macro_f1"]
+        ax.bar(i - width / 2, every, width, color=BLUE, label="All cases" if i == 0 else None)
+        ax.bar(
+            i + width / 2,
+            story,
+            width,
+            color=ORANGE,
+            label="One case per story" if i == 0 else None,
+        )
+        ax.text(i - width / 2, every + 0.015, f"{every:.2f}", ha="center", color=INK)
+        ax.text(i + width / 2, story + 0.015, f"{story:.2f}", ha="center", color=INK)
+    ax.set_xticks(range(len(names)), [labels[n] for n in names])
+    ax.set_ylim(0, 1.22)
+    ax.set_ylabel("Macro-F1")
+    ax.set_title("Dispute classifier (assistant-written cases)", loc="left", fontsize=12)
+    ax.legend(frameon=False, loc="upper center", ncol=2)
+    fig.text(
+        0.01,
+        -0.04,
+        "Synthetic cases from one author, not validated on real data.",
+        color=MUTED,
+        fontsize=9,
+    )
+    return _save(fig, out / "dispute_f1.png")
+
+
+def dispute_confusion(summary: dict[str, Any], out: Path) -> Path:
+    block = summary["dispute_classifier"]["baseline"]["splits"]["test1"]["confusion_matrix"]
+    matrix, labels = block["rows_true_columns_predicted"], block["labels"]
+    short = ["Seller fault", "Buyer false claim", "Courier issue", "Insufficient evidence"]
+    fig, ax = plt.subplots(figsize=(5.6, 4.8))
+    ax.imshow(matrix, cmap="Blues")
+    ax.grid(False)
+    ax.set_xticks(range(len(labels)), short, rotation=25, ha="right")
+    ax.set_yticks(range(len(labels)), short)
+    peak = max(max(row) for row in matrix)
+    for i, row in enumerate(matrix):
+        for j, value in enumerate(row):
+            ax.text(
+                j,
+                i,
+                str(value),
+                ha="center",
+                va="center",
+                color="white" if value > peak / 2 else INK,
+            )
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("True")
+    ax.set_title("Test 1 confusion matrix", loc="left", fontsize=12)
+    return _save(fig, out / "dispute_confusion_test1.png")
+
+
 def make_all(summary: dict[str, Any], out: Path) -> list[Path]:
     """Draw every figure whose data exists; nothing is drawn for a section that is not measured."""
     _style()
@@ -91,4 +154,6 @@ def make_all(summary: dict[str, Any], out: Path) -> list[Path]:
         written += [trust_comparison(summary, out), calibration(summary, out)]
     if summary["fairness"].get("status") == "measured":
         written.append(policy_recall(summary, out))
+    if summary["dispute_classifier"].get("status") == "measured":
+        written += [dispute_f1(summary, out), dispute_confusion(summary, out)]
     return written

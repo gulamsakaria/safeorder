@@ -1,0 +1,44 @@
+{
+  "algorithm": "TF-IDF (word + char n-grams) + logistic regression, sigmoid calibration",
+  "calibration": "sigmoid, fitted on the validation split",
+  "classes": [
+    "BUYER_FALSE_CLAIM",
+    "COURIER_ISSUE",
+    "INSUFFICIENT_EVIDENCE",
+    "SELLER_FAULT"
+  ],
+  "data_provenance": "Cases written by the Claude assistant (see raw/PROVENANCE.md), not by ChatGPT, Gemini or the team. Not validated on real data.",
+  "hyperparameters": {
+    "C": 3.0,
+    "char_ngrams": [
+      2,
+      5
+    ],
+    "latency_budget_ms": 100,
+    "max_features_char": 40000,
+    "max_features_word": 20000,
+    "seed": 42,
+    "word_ngrams": [
+      1,
+      2
+    ]
+  },
+  "libraries": {
+    "joblib": "1.6.0",
+    "numpy": "2.4.6",
+    "scikit-learn": "1.9.1"
+  },
+  "note": "Trained on synthetic, assistant-written cases only. Not validated on real data.",
+  "trained_at": "2026-10-02",
+  "trained_on": {
+    "train": {
+      "rows": 383,
+      "sha256": "bfb3f0b7fb8f9583ee182783d55d35dd35cf33dbd9d6458268ea6e5891486abf"
+    },
+    "validation": {
+      "rows": 89,
+      "sha256": "dd22ed44fbbd87bd4216c6da4ee287547f1f1b264492b356897361fb140966b2"
+    }
+  },
+  "version": "dispute_baseline_v1"
+}

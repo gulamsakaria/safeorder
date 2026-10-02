@@ -12,6 +12,8 @@ DOCUMENTS = {
     "evaluation_protocol": lambda: build_docs.evaluation_protocol(CFG),
     "responsible_ai": lambda: build_docs.responsible_ai(CFG),
     "licence_register": build_docs.licence_register,
+    "dispute_model_card": lambda: build_docs.dispute_model_card(CFG),
+    "dispute_dataset_card": lambda: build_docs.dispute_dataset_card(CFG),
 }
 
 
@@ -35,6 +37,8 @@ def test_the_generated_files_in_docs_are_current() -> None:
         "dataset_card_synthetic_sellers.md": DOCUMENTS["dataset_card"],
         "evaluation_protocol.md": DOCUMENTS["evaluation_protocol"],
         "responsible_ai.md": DOCUMENTS["responsible_ai"],
+        "model_card_dispute_classifier.md": DOCUMENTS["dispute_model_card"],
+        "dataset_card_dispute_cases.md": DOCUMENTS["dispute_dataset_card"],
     }.items():
         assert (build_docs.DOCS / name).read_text(encoding="utf-8") == build(), (
             f"docs/{name} is stale: run `make docs`"
@@ -71,3 +75,11 @@ def test_upload_script_has_no_way_to_make_a_repository_public() -> None:
     assert "private=False" not in source
     assert "--public" not in source
     assert upload_hf.MODEL_FILES
+
+
+def test_dispute_documents_state_the_single_author_limit() -> None:
+    for name in ("dispute_model_card", "dispute_dataset_card"):
+        text = DOCUMENTS[name]().lower()
+        assert "written by the ai assistant" in text or "written by the ai" in text
+        assert "not" in text and "chatgpt" in text
+    assert "no human has reviewed" in DOCUMENTS["dispute_dataset_card"]().lower()

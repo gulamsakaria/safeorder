@@ -196,10 +196,10 @@ def load_demo_scenarios(
     config = cfg or load_config()
     with Session(engine) as session:
         sellers = pick_sellers(session, model, config)
-        buyers = [b.id for b in session.exec(select(Buyer).order_by(Buyer.id).limit(4)).all()]  # type: ignore[arg-type]
-    if len(buyers) < 4:
-        raise DemoSetupError("the demo needs at least four buyers")
-    happy_buyer, fault_buyer, claimant, injector = buyers
+        buyers = [b.id for b in session.exec(select(Buyer).order_by(Buyer.id).limit(5)).all()]  # type: ignore[arg-type]
+    if len(buyers) < 5:
+        raise DemoSetupError("the demo needs at least five buyers")
+    happy_buyer, fault_buyer, claimant, injector, judge_buyer = buyers
 
     # A private in-process app for the setup calls: no frontend, no rate limit, no demo code (the
     # caller has already been checked, and the setup must not depend on the public settings).
@@ -308,10 +308,13 @@ def load_demo_scenarios(
         )
     )  # fmt: skip
 
+    order = place(judge_buyer, sellers["happy"], 2_200)
     out.append(
         ScenarioInfo(
-            7, "judge_case", analysis="pending_classifier" if not analysable else None,
-            detail="A judge types a short dispute; needs the trained classifier.",
+            7, "judge_case", seller_id=sellers["happy"].id, buyer_id=judge_buyer,
+            order_id=order["id"], delivery_code=order.get("delivery_code"),
+            detail="A judge reports a problem on this held order in their own words; the analyst "
+            "console then shows the probabilities and the route.",
         )
     )  # fmt: skip
     names = {s.id: s.display_name for s in sellers.values()}

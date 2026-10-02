@@ -1,0 +1,49 @@
+{
+  "by_label": {
+    "BUYER_FALSE_CLAIM": 260,
+    "COURIER_ISSUE": 269,
+    "INSUFFICIENT_EVIDENCE": 257,
+    "SELLER_FAULT": 264
+  },
+  "by_language_style": {
+    "banglish": 211,
+    "mixed": 191,
+    "regional": 272,
+    "standard": 376
+  },
+  "by_source": {
+    "claude_a": 472,
+    "claude_b": 310,
+    "claude_c": 244,
+    "claude_inj": 24
+  },
+  "by_subtype": {
+    "BF1": 67,
+    "BF2": 65,
+    "BF3": 67,
+    "BF4": 61,
+    "CI1": 67,
+    "CI2": 68,
+    "CI3": 68,
+    "CI4": 66,
+    "IE1": 68,
+    "IE2": 65,
+    "IE3": 63,
+    "IE4": 61,
+    "SF1": 67,
+    "SF2": 67,
+    "SF3": 64,
+    "SF4": 66
+  },
+  "dropped": {
+    "duplicate_text": 94
+  },
+  "files": 68,
+  "injection_cases": 24,
+  "kept": 1050,
+  "manual_review": {
+    "done": false,
+    "note": "Nobody has read a sample of the cases and removed wrong-label or unrealistic ones. The blueprint asks the team to read about 10% and record the share deleted."
+  },
+  "read": 1144
+}

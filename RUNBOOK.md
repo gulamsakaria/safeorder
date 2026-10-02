@@ -31,9 +31,22 @@ curl -X POST localhost:8000/api/demo/reset -H 'content-type: application/json' \
 
 - Interactive docs: http://localhost:8000/docs. The contract file is `docs/openapi.json`
   (`make openapi` rewrites it; a test fails when it is stale).
-- `POST /api/disputes/{id}/analyze` needs the trained dispute classifier (Step 6). Until it exists the
-  call answers `503 CLASSIFIER_UNAVAILABLE`.
+- `POST /api/disputes/{id}/analyze` needs the trained dispute classifier (`make cases train-dispute`).
+  Without `models/dispute_baseline_v1.joblib` the call answers `503 CLASSIFIER_UNAVAILABLE`.
 - `/api/sim/*` and `/api/demo/*` are sandbox-only; set `api.demo_endpoints_enabled: false` to disable them.
+
+## Dispute cases and the classifier
+
+```bash
+make make-cases      # rewrites raw/ from the assistant-written bank (deterministic; skip if you add your own)
+make cases           # validate_cases + split_cases -> data/cases/*.jsonl, reports/dispute_cases_*.json
+make train-dispute   # fits models/dispute_baseline_v1.joblib
+make eval && make docs
+```
+
+To add the team's cases: drop `team_<SUBTYPE>.jsonl` (fields: BLUEPRINT.md Section 8.3, `source`
+`team`) into `raw/`, run `make cases train-dispute eval docs`: they fill Test 2 and are reported
+separately. Read `raw/PROVENANCE.md` first.
 
 ## Live demo on Hugging Face (free Space)
 
@@ -54,15 +67,14 @@ first build takes a few minutes. Then open `https://<your-user>-safeorder.hf.spa
   minute or two to wake up.
 - `/demo` asks for the demo code (the field is on the page). Everything else is open to anyone
   with the link, so keep the Space private or share the link only with judges and the team.
-- Each (re)start resets the data and reloads the seven scenarios; the scenarios that need the
-  dispute classifier show "analysis pending" until it exists.
+- Each (re)start resets the data and reloads the seven scenarios (the trained classifier is in the image).
 - Try the container locally first, if Docker is installed:
   `docker build -t safeorder . && docker run -p 7860:7860 safeorder`.
 
 ## Rehearsal and limits
 
 ```bash
-make rehearse        # three clean demo runs from a reset (stand-in classifier until Step 6)
+make rehearse        # three clean demo runs from a reset, with the real classifier (--stand-in: fixed one)
 make secret-scan
 ```
 
@@ -100,9 +112,10 @@ the tool), and run `make eval` again.
 make data && make train && make demo-reset   # prints the ids to use (sellers, orders, disputes)
 ```
 
-The same set loads from the hidden `/demo` page ("load scenarios"). Scenarios 3, 4, 6 and 7 need a
-trained dispute classifier before their analysis can run (Step 6); until then they show
-"analysis pending".
+The same set loads from the hidden `/demo` page ("load scenarios"). Scenarios 3, 4 and 6 are analysed
+by the trained dispute classifier while loading (without it they show "analysis pending"). Scenario 7
+is a held order: a judge reports a problem on it in their own words, then runs the analysis in the
+analyst console.
 
 ## Trained models on Kaggle (private)
 

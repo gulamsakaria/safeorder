@@ -484,7 +484,7 @@ def test_build_text_format_and_missing_parts() -> None:
     )
 
 
-def test_classifier_validation_and_missing_model() -> None:
+def test_classifier_validation_and_missing_model(monkeypatch, tmp_path) -> None:
     good = FixedClassifier(DisputeClass.SELLER_FAULT, 0.7).probs
     assert clf.validate_probabilities(good) == good
     with pytest.raises(ValueError):
@@ -493,6 +493,7 @@ def test_classifier_validation_and_missing_model() -> None:
         clf.validate_probabilities({"SELLER_FAULT": 1.0})
     assert clf.top_class({"SELLER_FAULT": 0.4, "BUYER_FALSE_CLAIM": 0.4, "COURIER_ISSUE": 0.1,
                           "INSUFFICIENT_EVIDENCE": 0.1})[0] == "SELLER_FAULT"  # fmt: skip
+    monkeypatch.setattr(clf, "model_path", lambda cfg=None: tmp_path / "missing.joblib")
     with pytest.raises(clf.ClassifierNotAvailable):
         clf.load_classifier()
 

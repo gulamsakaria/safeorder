@@ -15,7 +15,7 @@ from typing import Any
 
 from app.config import load_config
 from app.trust.dataset import REPO_ROOT
-from eval import figures, injection_eval, time_study, trust_eval
+from eval import dispute_eval, figures, injection_eval, time_study, trust_eval
 
 SCHEMA_VERSION = 1
 NOT_MEASURED = "not_measured"
@@ -68,10 +68,14 @@ def build_summary(reports: dict[str, dict[str, Any] | None]) -> dict[str, Any]:
 
     if dispute:
         dispute_section: dict[str, Any] = {"status": "measured", "baseline": dispute}
+        routing_section: dict[str, Any] = {
+            "status": "measured",
+            "note": "Through the real analyzer; case records carry no history: no REPEAT_CLAIMANT.",
+            **dispute["routing"],
+        }
     else:
-        dispute_section = _missing(
-            "no dispute classifier yet: the team's dispute cases (Step 5) are not in raw/"
-        )
+        dispute_section = _missing("no dispute model: run `make cases train-dispute` first")
+        routing_section = _missing("needs the dispute classifier and its test cases")
 
     if injection:
         injection_section: dict[str, Any] = {"status": "measured_on_developer_phrases", **injection}
@@ -84,10 +88,7 @@ def build_summary(reports: dict[str, dict[str, Any] | None]) -> dict[str, Any]:
         "trust": trust_section,
         "fairness": fairness,
         "dispute_classifier": dispute_section,
-        "routing": _missing(
-            "routing coverage and wrong-refund / wrong-rejection rates need the dispute "
-            "classifier and its test cases"
-        ),
+        "routing": routing_section,
         "injection": injection_section,
         "time_study": {"status": "measured", **study} if study else _missing(
             "no timed analyst sessions yet: copy docs/time_study_template.json to "
@@ -107,6 +108,8 @@ def main() -> None:
 
     if not args.skip_trust:
         trust_eval.main()
+    if (directory.parent / cfg["paths"]["models_dir"] / "dispute_baseline_v1.joblib").exists():
+        dispute_eval.main()
     injection_eval.main()
     time_study.main()
 

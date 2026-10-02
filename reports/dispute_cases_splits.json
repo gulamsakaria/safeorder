@@ -1,0 +1,195 @@
+{
+  "guarantees_checked": [
+    "no batch in two splits",
+    "no claim text shared by train, validation, test1 and test2",
+    "no story key shared by train, validation, test1 and test2",
+    "injection set disjoint from train and validation in claim text",
+    "injection cases only in the injection set"
+  ],
+  "removed_for_shared_claim_text": {},
+  "splits": {
+    "injection": {
+      "batches": 4,
+      "by_label": {
+        "BUYER_FALSE_CLAIM": 6,
+        "COURIER_ISSUE": 6,
+        "INSUFFICIENT_EVIDENCE": 6,
+        "SELLER_FAULT": 6
+      },
+      "by_language_style": {
+        "regional": 14,
+        "standard": 10
+      },
+      "by_source": {
+        "claude_inj": 24
+      },
+      "by_subtype": {
+        "BF1": 2,
+        "BF2": 2,
+        "BF3": 1,
+        "BF4": 1,
+        "CI1": 2,
+        "CI2": 2,
+        "CI3": 1,
+        "CI4": 1,
+        "IE1": 2,
+        "IE2": 2,
+        "IE3": 1,
+        "IE4": 1,
+        "SF1": 2,
+        "SF2": 2,
+        "SF3": 1,
+        "SF4": 1
+      },
+      "distinct_stories": 14,
+      "n": 24
+    },
+    "test1": {
+      "batches": 16,
+      "by_label": {
+        "BUYER_FALSE_CLAIM": 76,
+        "COURIER_ISSUE": 78,
+        "INSUFFICIENT_EVIDENCE": 77,
+        "SELLER_FAULT": 79
+      },
+      "by_language_style": {
+        "banglish": 98,
+        "mixed": 106,
+        "standard": 106
+      },
+      "by_source": {
+        "claude_b": 310
+      },
+      "by_subtype": {
+        "BF1": 20,
+        "BF2": 18,
+        "BF3": 20,
+        "BF4": 18,
+        "CI1": 19,
+        "CI2": 20,
+        "CI3": 20,
+        "CI4": 19,
+        "IE1": 20,
+        "IE2": 19,
+        "IE3": 18,
+        "IE4": 20,
+        "SF1": 20,
+        "SF2": 20,
+        "SF3": 19,
+        "SF4": 20
+      },
+      "distinct_stories": 132,
+      "n": 310
+    },
+    "test2": {
+      "batches": 16,
+      "by_label": {
+        "BUYER_FALSE_CLAIM": 59,
+        "COURIER_ISSUE": 66,
+        "INSUFFICIENT_EVIDENCE": 59,
+        "SELLER_FAULT": 60
+      },
+      "by_language_style": {
+        "regional": 113,
+        "standard": 131
+      },
+      "by_source": {
+        "claude_c": 244
+      },
+      "by_subtype": {
+        "BF1": 15,
+        "BF2": 15,
+        "BF3": 16,
+        "BF4": 13,
+        "CI1": 16,
+        "CI2": 16,
+        "CI3": 17,
+        "CI4": 17,
+        "IE1": 17,
+        "IE2": 15,
+        "IE3": 15,
+        "IE4": 12,
+        "SF1": 15,
+        "SF2": 15,
+        "SF3": 14,
+        "SF4": 16
+      },
+      "distinct_stories": 28,
+      "n": 244
+    },
+    "train": {
+      "batches": 16,
+      "by_label": {
+        "BUYER_FALSE_CLAIM": 96,
+        "COURIER_ISSUE": 96,
+        "INSUFFICIENT_EVIDENCE": 95,
+        "SELLER_FAULT": 96
+      },
+      "by_language_style": {
+        "banglish": 68,
+        "mixed": 85,
+        "regional": 101,
+        "standard": 129
+      },
+      "by_source": {
+        "claude_a": 383
+      },
+      "by_subtype": {
+        "BF1": 24,
+        "BF2": 24,
+        "BF3": 24,
+        "BF4": 24,
+        "CI1": 24,
+        "CI2": 24,
+        "CI3": 24,
+        "CI4": 24,
+        "IE1": 23,
+        "IE2": 24,
+        "IE3": 24,
+        "IE4": 24,
+        "SF1": 24,
+        "SF2": 24,
+        "SF3": 24,
+        "SF4": 24
+      },
+      "distinct_stories": 365,
+      "n": 383
+    },
+    "validation": {
+      "batches": 16,
+      "by_label": {
+        "BUYER_FALSE_CLAIM": 23,
+        "COURIER_ISSUE": 23,
+        "INSUFFICIENT_EVIDENCE": 20,
+        "SELLER_FAULT": 23
+      },
+      "by_language_style": {
+        "banglish": 45,
+        "regional": 44
+      },
+      "by_source": {
+        "claude_a": 89
+      },
+      "by_subtype": {
+        "BF1": 6,
+        "BF2": 6,
+        "BF3": 6,
+        "BF4": 5,
+        "CI1": 6,
+        "CI2": 6,
+        "CI3": 6,
+        "CI4": 5,
+        "IE1": 6,
+        "IE2": 5,
+        "IE3": 5,
+        "IE4": 4,
+        "SF1": 6,
+        "SF2": 6,
+        "SF3": 6,
+        "SF4": 5
+      },
+      "distinct_stories": 14,
+      "n": 89
+    }
+  }
+}

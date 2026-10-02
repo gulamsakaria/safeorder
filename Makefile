@@ -1,6 +1,6 @@
 PY := .venv/bin/python
 
-.PHONY: setup data train api web web-mock test test-web lint eval demo-reset openapi kaggle kaggle-models gen-api docs rehearse secret-scan deploy-space
+.PHONY: setup data train api web web-mock test test-web lint eval demo-reset openapi kaggle kaggle-models gen-api docs cases train-dispute make-cases rehearse secret-scan deploy-space
 
 setup:
 	python3.11 -m venv .venv
@@ -31,6 +31,16 @@ gen-api: openapi
 
 data:
 	PYTHONPATH=backend:. $(PY) -m scripts.generate_sellers --version both --load-db
+
+make-cases:
+	PYTHONPATH=backend:. $(PY) -m scripts.make_cases
+
+cases:
+	PYTHONPATH=backend:. $(PY) -m scripts.validate_cases
+	PYTHONPATH=backend:. $(PY) -m scripts.split_cases
+
+train-dispute:
+	PYTHONPATH=backend:. $(PY) -m scripts.train_dispute
 
 train:
 	PYTHONPATH=backend:. $(PY) -m scripts.train_trust

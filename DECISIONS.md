@@ -459,3 +459,45 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
   untested until the first deploy. The Hugging Face account was not reachable from this session
   (the stored credential is not accepted by the Hub API), so nothing has been deployed: the team
   runs `scripts/deploy_space.py` with their own token.
+
+
+## Steps 5 and 6 - dispute cases and the baseline classifier (done without the team's cases)
+
+- **Why I wrote the cases myself:** the blueprint expects ChatGPT, Gemini and team-written cases in
+  `raw/`; none arrived, and the project owner told me to finish the project. So the Claude assistant
+  wrote the case bank (`scripts/case_bank/`: 7 claim families x 16 wordings, and per sub-type 10
+  seller responses, 8 buyer and 8 seller evidence texts, in standard, Banglish, regional and mixed
+  Bangla) and `scripts/make_cases.py` combines them with seeded choices. **Nothing was written by
+  ChatGPT, Gemini or the team, no real text was used, and no human has reviewed any case.**
+  `raw/PROVENANCE.md` says so; the dataset card and the model card repeat it.
+- **What this does and does not show.** The blueprint's cross-source test is not reproduced: every
+  split has the same author, so the scores show that the pipeline works and that unseen wording is
+  handled, not how the model does on other people's text or real disputes. They are probably
+  optimistic for that. The test pools are small: Test 1 has 132 distinct stories in 310 cases, Test
+  2 has 28 in 244, so every report also gives the numbers on one case per story (lower: macro-F1
+  0.74 and 0.58).
+- **Splits:** by source and batch (`dispute.cases.roles`); an unknown source stops the script;
+  a claim text or a combination of source texts never appears in two of train, validation, Test 1,
+  Test 2 (enforced in `scripts/split_cases.py`, tested on fixtures and on the real files). The
+  injection set (24 test-style cases with an added instruction sentence) is never trained on.
+- **Classifier:** TF-IDF (word 1-2 and char 2-5 grams) + class-balanced logistic regression, sigmoid
+  calibration fitted on the validation split. Hyperparameters were set once before the first
+  evaluation and never changed. Results: macro-F1 0.78 (Test 1) and 0.70 (Test 2); wrong-refund
+  rate 5.3% and 8.5%; wrong-rejection rate 3.8% and 11.1%; calibration error 0.09 and 0.06
+  (not well calibrated, ~0.09); about 17% of Test 1 cases reach the fast lane, 96% of them correct,
+  none a wrong refund. INSUFFICIENT_EVIDENCE is the weakest class. Prediction takes about 4-7 ms.
+- **Injection, classifier level:** the screen detects 8 of the 24 injection cases (33%); the
+  recommendation changed in 4 of 24 compared with each case's twin (the same case without the
+  sentence), and 20 of 24 went to a human (the rest for other reasons). A sentence the screen misses
+  reaches a bag-of-words model as ordinary words.
+- **The demo now uses the real classifier.** Scenarios 3, 4 and 6 are analysed when the scenarios
+  load: seller fault -> refund suggested (55% seller fault), false claim -> rejection suggested
+  (74%), injection -> injection flag, human review, "needs more evidence". Scenario 7 is a held order
+  on which the judge reports a problem in their own words; the analyst console then shows the
+  probabilities. `make rehearse` passes three identical runs with the real classifier.
+- **Not done:** the transformer fine-tune (Step 13, P1): it needs a GPU run, a licence check of a
+  Bangla base model, and honest data to beat the baseline on; a model trained on one author's
+  templates would only learn the templates better. The 10% manual review of the cases (a person
+  must do it). The team's own Test 2 cases.
+- **Open question for a person:** the assistant's terms on using its output to train another model,
+  even a small linear classifier (licence register).
