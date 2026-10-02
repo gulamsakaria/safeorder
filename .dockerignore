@@ -1,0 +1,14 @@
+.git
+.venv
+**/__pycache__
+**/node_modules
+frontend/dist
+build
+data
+docs
+raw
+kaggle
+eval
+backend/tests
+.env
+*.db

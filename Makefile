@@ -1,6 +1,6 @@
 PY := .venv/bin/python
 
-.PHONY: setup data train api web web-mock test test-web lint eval demo-reset openapi kaggle kaggle-models gen-api docs rehearse secret-scan
+.PHONY: setup data train api web web-mock test test-web lint eval demo-reset openapi kaggle kaggle-models gen-api docs rehearse secret-scan deploy-space
 
 setup:
 	python3.11 -m venv .venv
@@ -46,6 +46,9 @@ rehearse:
 
 secret-scan:
 	$(PY) -m scripts.secret_scan
+
+deploy-space:
+	@echo "usage: HF_TOKEN=... PYTHONPATH=backend:. $(PY) -m scripts.deploy_space --repo-id <user>/safeorder [--public] [--dry-run]"
 
 docs:
 	PYTHONPATH=backend:. $(PY) -m scripts.build_docs

@@ -53,7 +53,12 @@ api:
   max_note_chars: 2000
   search_limit: 10
   max_body_bytes: 65536            # larger request bodies are refused with 413
+  trust_proxy_headers: false       # true only behind a proxy that sets X-Forwarded-For (a Space, a load balancer)
   rate_limit_per_minute: 240       # per client address; 0 switches the limit off (429 when exceeded)
+
+# Serving the built frontend from the API (SAFEORDER_SERVE_FRONTEND=1), for a one-address deployment.
+web:
+  dist_dir: frontend/dist
 
 # Synthetic seller generator (BLUEPRINT.md Section 8.2). Every number here is an assumption,
 # not an observation of any real market. Ranges are [low, high].

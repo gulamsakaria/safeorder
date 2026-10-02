@@ -10,6 +10,7 @@ filed, but nothing is released, refunded or decided. Scenarios that need the evi
 ``pending_classifier`` and no stand-in numbers are produced.
 """
 
+import copy
 from dataclasses import asdict, dataclass
 from typing import Any
 
@@ -200,7 +201,13 @@ def load_demo_scenarios(
         raise DemoSetupError("the demo needs at least four buyers")
     happy_buyer, fault_buyer, claimant, injector = buyers
 
-    api = _Driver(TestClient(create_app(engine, model, classifier, config)))
+    # A private in-process app for the setup calls: no frontend, no rate limit, no demo code (the
+    # caller has already been checked, and the setup must not depend on the public settings).
+    inner_cfg = copy.deepcopy(config)
+    inner_cfg["api"]["rate_limit_per_minute"] = 0
+    inner = create_app(engine, model, classifier, inner_cfg, serve_frontend=False)
+    inner.state.demo_code = None
+    api = _Driver(TestClient(inner))
     analysable = _classifier_ready(classifier)
 
     def place(buyer: str, seller: Seller, amount: int) -> dict[str, Any]:

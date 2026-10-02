@@ -49,11 +49,13 @@ class SecurityMiddleware:
         *,
         max_body_bytes: int,
         rate_limit_per_minute: int,
+        trust_proxy: bool = False,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self.app = app
         self.max_body_bytes = max_body_bytes
         self.limit = rate_limit_per_minute
+        self.trust_proxy = trust_proxy
         self.clock = clock
         self.hits: dict[str, deque[float]] = {}
 
@@ -71,6 +73,15 @@ class SecurityMiddleware:
                 del self.hits[key]
         return None
 
+    def _client(self, scope: Scope) -> str:
+        """The caller's address; behind a trusted proxy, the first X-Forwarded-For entry."""
+        if self.trust_proxy:
+            forwarded = dict(scope["headers"]).get(b"x-forwarded-for", b"").decode("latin-1")
+            first = forwarded.split(",")[0].strip()
+            if first:
+                return first
+        return (scope.get("client") or ("unknown", 0))[0]
+
     async def _respond(self, send: Send, status: int, headers: list, body: bytes) -> None:
         await send({"type": "http.response.start", "status": status, "headers": headers})
         await send({"type": "http.response.body", "body": body})
@@ -81,7 +92,7 @@ class SecurityMiddleware:
             return
 
         if self.limit > 0 and scope["path"] not in EXEMPT_PATHS:
-            client = (scope.get("client") or ("unknown", 0))[0]
+            client = self._client(scope)
             wait = self._allowed(client)
             if wait is not None:
                 retry = [(b"retry-after", str(int(wait) + 1).encode())]
@@ -140,4 +151,5 @@ def install(app: Any, api_cfg: dict[str, Any]) -> None:
         SecurityMiddleware,
         max_body_bytes=api_cfg["max_body_bytes"],
         rate_limit_per_minute=api_cfg["rate_limit_per_minute"],
+        trust_proxy=api_cfg.get("trust_proxy_headers", False),
     )

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { calls } from '../api/calls'
+import { DEMO_CODE_KEY } from '../api/client'
 import type { Schemas } from '../api/client'
 import { useAction } from '../api/hooks'
 import { ErrorNotice } from '../components/ErrorNotice'
@@ -19,6 +20,21 @@ export function DemoPage() {
   const [orderId, setOrderId] = useState('')
   const [hours, setHours] = useState('24')
   const [note, setNote] = useState<string>()
+  const [code, setCode] = useState(() => {
+    try {
+      return sessionStorage.getItem(DEMO_CODE_KEY) ?? ''
+    } catch {
+      return ''
+    }
+  })
+  const changeCode = (value: string) => {
+    setCode(value)
+    try {
+      sessionStorage.setItem(DEMO_CODE_KEY, value)
+    } catch {
+      // ignore: the code then lasts only until the next reload
+    }
+  }
   const [scenarios, setScenarios] = useState<Scenario[] | null>(null)
 
   const courier = useAction(async (status: Schemas['CourierStatus']) => {
@@ -46,6 +62,18 @@ export function DemoPage() {
     <Card className="space-y-4">
       <h2 className="text-lg font-bold">{t('demo.title')}</h2>
       <p className="text-slate-600">{t('demo.note')}</p>
+
+      <div>
+        <Label htmlFor="demo-code">{t('demo.code.label')}</Label>
+        <TextInput
+          id="demo-code"
+          type="password"
+          autoComplete="off"
+          value={code}
+          placeholder={t('demo.code.hint')}
+          onChange={(e) => changeCode(e.target.value)}
+        />
+      </div>
 
       <div>
         <Label htmlFor="demo-order">{t('demo.order')}</Label>

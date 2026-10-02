@@ -5,6 +5,7 @@ inject their own. When they are not given, the engine and the trust model are cr
 use, and the dispute classifier is loaded from the trained model (see Step 6).
 """
 
+import os
 from typing import Any
 
 from fastapi import FastAPI
@@ -14,6 +15,7 @@ from sqlalchemy import Engine
 from app.api import analyst, demo, disputes, metrics, orders, sim, trust
 from app.api.errors import install_error_handlers
 from app.config import load_config
+from app.deploy import REPO_ROOT, apply_env, env_flag, install_frontend, lifespan
 from app.disputes.classifier import DisputeClassifier
 from app.schemas import ErrorOut
 from app.security import install as install_security
@@ -35,10 +37,12 @@ def create_app(
     trust_model: TrustModel | None = None,
     classifier: DisputeClassifier | None = None,
     cfg: dict[str, Any] | None = None,
+    serve_frontend: bool | None = None,
 ) -> FastAPI:
-    config = cfg or load_config()
-    app = FastAPI(title=config["project"]["name"], version="1.0")
+    config = cfg or apply_env(load_config())
+    app = FastAPI(title=config["project"]["name"], version="1.0", lifespan=lifespan)
     app.state.cfg = config
+    app.state.demo_code = os.environ.get("SAFEORDER_DEMO_CODE") or None
     app.state.engine = engine
     app.state.trust_model = trust_model
     app.state.classifier = classifier
@@ -59,6 +63,10 @@ def create_app(
     prefix = config["api"]["base_path"]
     for module in (trust, orders, sim, disputes, analyst, metrics, demo):
         app.include_router(module.router, prefix=prefix, responses=ERROR_RESPONSES)
+    if (
+        env_flag("SAFEORDER_SERVE_FRONTEND") if serve_frontend is None else serve_frontend
+    ):  # last: its catch-all route must not shadow the API
+        install_frontend(app, REPO_ROOT / config["web"]["dist_dir"])
     return app
 
 

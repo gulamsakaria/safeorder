@@ -424,3 +424,38 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
 - **Not done on purpose:** the `mvp-freeze` tag. The blueprint's P0 list still lacks Steps 5 and 6
   (dispute cases and classifier), so freezing now would freeze an incomplete MVP. Also not done:
   the backup video (a person must record it) and a run of the real demo with a trained classifier.
+
+
+## One-address deployment (Hugging Face Space)
+
+- **Why:** the team's cPanel hosting cannot run Python, the demo must be shown live, and paid hosting
+  is not an option. A free Docker Space can run the API and the built frontend in one container, so
+  the whole app is one link.
+- **How:** `Dockerfile` (two stages: build the frontend with an empty API address so it calls the
+  address it was loaded from; then a Python 3.11 image that installs `requirements-runtime.txt`,
+  generates the synthetic data at build time and starts the server on port 7860). Everything is
+  switched on by environment variables so local development and the tests are unchanged
+  (`backend/app/deploy.py`): serve the frontend with a fallback to `index.html` for client-side
+  routes (files outside the build folder are never served), load the seven demo scenarios on every
+  start (the Space's disk is temporary), optionally protect `/api/demo` and `/api/sim` with a demo
+  code, and read the client address from `X-Forwarded-For` behind the proxy.
+- **Library versions are pinned to what the trust model was trained with** (a test compares them
+  with `models/trust_v1.meta.json`), because a pickled model must be loaded by the same versions.
+- **Bug found while testing the container steps:** the demo scenarios are set up through an
+  in-process copy of the API; with a demo code set, that copy refused its own setup calls
+  (403 on start-up). It now uses a private app without code, rate limit or frontend; a test covers it.
+- **The demo code is a gate for the sandbox controls, not authentication.** The buyer and analyst
+  screens stay open; anyone with the link can use them. A public Space is therefore only suitable
+  for the sandbox with synthetic data. The code is stored as a Space secret and sent by the browser
+  in a header from the code field on `/demo`.
+- **Rate limit behind the proxy:** every visitor would share the proxy's address, so
+  `SAFEORDER_TRUST_PROXY=1` (set in the Dockerfile) makes the limit per forwarded client. A
+  spoofed header gains nothing when the setting is off (tested). The limit stays 240/minute per
+  client.
+- **What could not be verified here:** there is no Docker daemon in this environment, so the
+  `Dockerfile` itself was not built. Its steps were replayed by hand in a clean virtual environment
+  with the pinned requirements (frontend build, data generation, start-up seeding, serving) and
+  checked in Chromium. The apt step (`libgomp1`, needed by LightGBM) and the real Space build are
+  untested until the first deploy. The Hugging Face account was not reachable from this session
+  (the stored credential is not accepted by the Hub API), so nothing has been deployed: the team
+  runs `scripts/deploy_space.py` with their own token.

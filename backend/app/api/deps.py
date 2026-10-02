@@ -1,5 +1,6 @@
 """Shared request dependencies: database session, models and configuration."""
 
+import hmac
 import threading
 from collections.abc import Iterator
 from pathlib import Path
@@ -56,10 +57,14 @@ def get_classifier(request: Request) -> DisputeClassifier:
     return classifier if classifier is not None else load_classifier()
 
 
-def require_demo(cfg: dict[str, Any] = Depends(get_config)) -> None:
-    """Demo-only endpoints answer 404 when switched off in the config."""
+def require_demo(request: Request, cfg: dict[str, Any] = Depends(get_config)) -> None:
+    """Demo-only endpoints answer 404 when switched off in the config, and, when a demo code is
+    set (SAFEORDER_DEMO_CODE), 403 unless the request carries it in the X-Demo-Code header."""
     if not cfg["api"]["demo_endpoints_enabled"]:
         raise ApiError(404, "NOT_FOUND", "not found")
+    expected = getattr(request.app.state, "demo_code", None)
+    if expected and not hmac.compare_digest(request.headers.get("x-demo-code", ""), expected):
+        raise ApiError(403, "DEMO_CODE_REQUIRED", "the demo code is missing or wrong")
 
 
 def get_optional_trust_model(

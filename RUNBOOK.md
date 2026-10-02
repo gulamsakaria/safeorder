@@ -35,6 +35,30 @@ curl -X POST localhost:8000/api/demo/reset -H 'content-type: application/json' \
   call answers `503 CLASSIFIER_UNAVAILABLE`.
 - `/api/sim/*` and `/api/demo/*` are sandbox-only; set `api.demo_endpoints_enabled: false` to disable them.
 
+## Live demo on Hugging Face (free Space)
+
+One container serves the API and the frontend on one address. Do this on your own computer, where
+you are logged in to Hugging Face (or have a token with write access; never paste it in a chat):
+
+```bash
+git pull
+HF_TOKEN=<token> SAFEORDER_DEMO_CODE=<a code you choose> \
+  PYTHONPATH=backend:. .venv/bin/python -m scripts.deploy_space --repo-id <your-user>/safeorder
+```
+
+It creates a **private** Space (add `--public` for judges; it can be switched in the Space
+settings), stores the demo code as a Space secret, and uploads the app. Watch the **Logs** tab: the
+first build takes a few minutes. Then open `https://<your-user>-safeorder.hf.space`.
+
+- Open the link once shortly before the demonstration: a free Space sleeps when idle and needs a
+  minute or two to wake up.
+- `/demo` asks for the demo code (the field is on the page). Everything else is open to anyone
+  with the link, so keep the Space private or share the link only with judges and the team.
+- Each (re)start resets the data and reloads the seven scenarios; the scenarios that need the
+  dispute classifier show "analysis pending" until it exists.
+- Try the container locally first, if Docker is installed:
+  `docker build -t safeorder . && docker run -p 7860:7860 safeorder`.
+
 ## Rehearsal and limits
 
 ```bash

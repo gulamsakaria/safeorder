@@ -5,14 +5,32 @@ export type Schemas = components['schemas']
 
 /** One switch decides the data source: VITE_USE_MOCK=true uses the in-browser mock server. */
 export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
+/** An empty VITE_API_BASE_URL means the API is served from the same address as the page. */
 export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+export const DEMO_CODE_KEY = 'safeorder.demoCode'
 export const DEMO_BUYER_ID: string = import.meta.env.VITE_DEMO_BUYER_ID ?? 'B-000001'
 
 export const api = createClient<paths>({
   // The mock intercepts requests to this same origin, so no other code changes between modes.
-  baseUrl: API_BASE_URL,
+  baseUrl: API_BASE_URL || globalThis.location?.origin || '',
   // Look fetch up at call time: a mock installed after this module loaded must still be hit.
   fetch: (request) => globalThis.fetch(request),
+})
+
+// The sandbox controls may be protected by a demo code (set on the server); send it when present.
+api.use({
+  onRequest({ request }) {
+    const path = new URL(request.url).pathname
+    if (path.startsWith('/api/demo') || path.startsWith('/api/sim')) {
+      try {
+        const code = sessionStorage.getItem(DEMO_CODE_KEY)
+        if (code) request.headers.set('X-Demo-Code', code)
+      } catch {
+        // storage may be blocked; the request then goes without a code
+      }
+    }
+    return request
+  },
 })
 
 export class ApiProblem extends Error {
