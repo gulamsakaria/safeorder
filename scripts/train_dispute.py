@@ -52,7 +52,7 @@ def main() -> int:
             for name, rows in (("train", train), ("validation", validation))
         },
         "data_provenance": (
-            "Cases written by the Claude assistant (see raw/PROVENANCE.md), not by ChatGPT, "
+            "Cases written by the AI assistant (see raw/PROVENANCE.md), not by ChatGPT, "
             "Gemini or the team. Not validated on real data."
         ),
         "classes": calibrated.classes,

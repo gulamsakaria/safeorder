@@ -21,7 +21,7 @@ def good(**overrides) -> dict:
         "product_category": "shoes", "amount_bdt": 1200, "courier_status": "not_dispatched",
         "delivery_code_used": False, "buyer_claim": "পণ্য পাইনি।", "seller_response": "",
         "buyer_evidence": "মেসেজ দিয়েছি।", "seller_evidence": "", "has_injection": False,
-        "source": "claude_a",
+        "source": "ai_a",
     }  # fmt: skip
     base.update(overrides)
     return base
@@ -269,11 +269,11 @@ def test_styles_are_spread_over_the_parts() -> None:
 def test_case_generation_is_deterministic_and_part_specific() -> None:
     import random
 
-    one = make_cases.make_case(random.Random(7), "test1", "SF1", "claude_b", 1)
-    two = make_cases.make_case(random.Random(7), "test1", "SF1", "claude_b", 1)
+    one = make_cases.make_case(random.Random(7), "test1", "SF1", "ai_b", 1)
+    two = make_cases.make_case(random.Random(7), "test1", "SF1", "ai_b", 1)
     assert one == two
     story = one["story_key"]
-    train_story = make_cases.make_case(random.Random(7), "train", "SF1", "claude_a", 1)["story_key"]
+    train_story = make_cases.make_case(random.Random(7), "train", "SF1", "ai_a", 1)["story_key"]
     assert story != train_story
 
 

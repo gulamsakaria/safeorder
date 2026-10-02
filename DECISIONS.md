@@ -464,7 +464,7 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
 ## Steps 5 and 6 - dispute cases and the baseline classifier (done without the team's cases)
 
 - **Why I wrote the cases myself:** the blueprint expects ChatGPT, Gemini and team-written cases in
-  `raw/`; none arrived, and the project owner told me to finish the project. So the Claude assistant
+  `raw/`; none arrived, and the project owner told me to finish the project. So the AI assistant
   wrote the case bank (`scripts/case_bank/`: 7 claim families x 16 wordings, and per sub-type 10
   seller responses, 8 buyer and 8 seller evidence texts, in standard, Banglish, regional and mixed
   Bangla) and `scripts/make_cases.py` combines them with seeded choices. **Nothing was written by

@@ -7,7 +7,7 @@
     "INSUFFICIENT_EVIDENCE",
     "SELLER_FAULT"
   ],
-  "data_provenance": "Cases written by the Claude assistant (see raw/PROVENANCE.md), not by ChatGPT, Gemini or the team. Not validated on real data.",
+  "data_provenance": "Cases written by the AI assistant (see raw/PROVENANCE.md), not by ChatGPT, Gemini or the team. Not validated on real data.",
   "hyperparameters": {
     "C": 3.0,
     "char_ngrams": [
@@ -33,11 +33,11 @@
   "trained_on": {
     "train": {
       "rows": 383,
-      "sha256": "bfb3f0b7fb8f9583ee182783d55d35dd35cf33dbd9d6458268ea6e5891486abf"
+      "sha256": "39ae8610e559b5a0cb65fbf45f28968aa4b72637138eb99f4d01193eb5c33a98"
     },
     "validation": {
       "rows": 89,
-      "sha256": "dd22ed44fbbd87bd4216c6da4ee287547f1f1b264492b356897361fb140966b2"
+      "sha256": "e90eb3f2c4f363ebfd2e0c67658fba9d9082a65ced68b67bc649946c6e842c7a"
     }
   },
   "version": "dispute_baseline_v1"

@@ -4,7 +4,7 @@
 
 *(working name; change it freely)*
 
-Project Blueprint and Step-by-Step Build Instructions for Claude Code
+Project Blueprint and Step-by-Step Build Instructions for the AI coding assistant
 
 AI Dev Fest 2026 - AI Hackathon (DIU CPC x upay)
 
@@ -12,22 +12,22 @@ Version 1.0 - 1 October 2026
 
 *Everything in this prototype runs on synthetic data inside a simulated (sandbox) wallet. No real money, no real customer data.*
 
-## 0. How to use this file with Claude Code
+## 0. How to use this file with the AI coding assistant
 
-This document is written so that Claude Code can execute it. It explains what we are building, why, the exact data and API contracts, and a numbered build plan (Section 13) in which every step has acceptance criteria. Humans decide; Claude Code builds.
+This document is written so that the AI coding assistant can execute it. It explains what we are building, why, the exact data and API contracts, and a numbered build plan (Section 13) in which every step has acceptance criteria. Humans decide; the coding assistant builds.
 
-- **Put it in the repo.** Claude Code reads Markdown most reliably. Convert once: pandoc BLUEPRINT.docx -t gfm -o BLUEPRINT.md and commit BLUEPRINT.md at the repository root.
+- **Put it in the repo.** The coding assistant reads Markdown most reliably. Convert once: pandoc BLUEPRINT.docx -t gfm -o BLUEPRINT.md and commit BLUEPRINT.md at the repository root.
 
-- **Create CLAUDE.md.** Copy Section 14 (Working rules) into a file named CLAUDE.md at the repo root so the rules are loaded in every session.
+- **Create WORKING_RULES.md.** Copy Section 14 (Working rules) into a file named WORKING_RULES.md at the repo root so the rules are loaded in every session.
 
 - **Feed the data.** Put the LLM-generated case files in raw/ (Section 8.3) and any public datasets in data/public/ before starting Steps 5 and 3.
 
-- **Run one step at a time.** After each step Claude Code must run the acceptance checks, commit, and report before moving on.
+- **Run one step at a time.** After each step the coding assistant must run the acceptance checks, commit, and report before moving on.
 
-Starter prompt to paste into Claude Code:
+Starter prompt to paste into the coding assistant:
 
 ```text
-Read BLUEPRINT.md completely, then read CLAUDE.md.
+Read BLUEPRINT.md completely, then read WORKING_RULES.md.
 Work strictly in the order of Section 13 (Step 0, Step 1, ...).
 For each step: (1) restate the goal in two lines, (2) implement,
 (3) run the "Done when" checks and show the output, (4) commit with
@@ -141,7 +141,7 @@ Decision -> update seller/buyer stats -> new trust snapshot (before/after)
 
 ```text
 safeorder/
-  BLUEPRINT.md        CLAUDE.md        DECISIONS.md      RUNBOOK.md
+  BLUEPRINT.md        WORKING_RULES.md   DECISIONS.md      RUNBOOK.md
   README.md           Makefile         .env.example
   config/config.yaml                     # every threshold and path lives here
   backend/
@@ -473,9 +473,9 @@ Bangla by default (Noto Sans Bengali), English toggle, mobile-first, large touch
 
 Keep a recorded backup video of scenarios 1 to 6 and 3 pre-loaded cases in case of network or hardware problems.
 
-## 13. Step-by-step build plan for Claude Code
+## 13. Step-by-step build plan for the AI coding assistant
 
-Each step is one unit of work with checks. Do them in order. Time-boxes assume a three-person team supervising Claude Code. If blocked for more than 2 hours, use the fallback and log it in DECISIONS.md.
+Each step is one unit of work with checks. Do them in order. Time-boxes assume a three-person team supervising the coding assistant. If blocked for more than 2 hours, use the fallback and log it in DECISIONS.md.
 
 ### Step 0 - Scaffold
 
@@ -489,7 +489,7 @@ Each step is one unit of work with checks. Do them in order. Time-boxes assume a
 
 - Frontend: Vite, React, TypeScript, Tailwind. Makefile targets: setup, data, train, api, web, test, eval, demo-reset.
 
-- config/config.yaml with every threshold from Section 6; .env.example; README with run instructions; DECISIONS.md; CLAUDE.md from Section 14.
+- config/config.yaml with every threshold from Section 6; .env.example; README with run instructions; DECISIONS.md; WORKING_RULES.md from Section 14.
 
 **Done when:**
 
@@ -719,7 +719,7 @@ Each step is one unit of work with checks. Do them in order. Time-boxes assume a
 
 - Each extra lives behind a flag and can be switched off without touching the demo path.
 
-## 14. Working rules for Claude Code (copy into CLAUDE.md)
+## 14. Working rules for the AI coding assistant (copy into WORKING_RULES.md)
 
 - Follow Section 13 in order, one step at a time; stop and report after each step.
 

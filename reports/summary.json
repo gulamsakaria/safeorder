@@ -20,14 +20,14 @@
       },
       "latency": {
         "budget_ms": 100,
-        "max_ms": 6.518489999962185,
-        "mean_ms": 3.773796653331184,
-        "p95_ms": 4.298161799985678,
+        "max_ms": 6.330356999995956,
+        "mean_ms": 3.7842947266665306,
+        "p95_ms": 5.257517349984654,
         "samples": 300,
         "within_budget": true
       },
       "model_version": "dispute_baseline_v1",
-      "note": "Cases were written by the Claude assistant, not by ChatGPT, Gemini or the team. All splits share one author, so the scores show that the pipeline works and that wording unseen in training is handled; they are NOT evidence of how the model would do on cases written by other people or on real disputes. Test 2 holds few distinct stories (see distinct_stories). Not validated on real data.",
+      "note": "Cases were written by the AI assistant, not by ChatGPT, Gemini or the team. All splits share one author, so the scores show that the pipeline works and that wording unseen in training is handled; they are NOT evidence of how the model would do on cases written by other people or on real disputes. Test 2 holds few distinct stories (see distinct_stories). Not validated on real data.",
       "routing": {
         "test1": {
           "fast_lane_accuracy": 0.9629629629629629,
@@ -298,7 +298,7 @@
             }
           },
           "by_source": {
-            "claude_b": {
+            "ai_b": {
               "accuracy": 0.7774193548387097,
               "calibration_ece": 0.08968295468062329,
               "confusion_matrix": {
@@ -673,7 +673,7 @@
             }
           },
           "by_source": {
-            "claude_c": {
+            "ai_c": {
               "accuracy": 0.7008196721311475,
               "calibration_ece": 0.06217888483994897,
               "confusion_matrix": {
@@ -1048,7 +1048,7 @@
             }
           },
           "by_source": {
-            "claude_a": {
+            "ai_a": {
               "accuracy": 0.7752808988764045,
               "calibration_ece": 0.10285417596482198,
               "confusion_matrix": {
@@ -1274,11 +1274,11 @@
       "trained_on": {
         "train": {
           "rows": 383,
-          "sha256": "bfb3f0b7fb8f9583ee182783d55d35dd35cf33dbd9d6458268ea6e5891486abf"
+          "sha256": "39ae8610e559b5a0cb65fbf45f28968aa4b72637138eb99f4d01193eb5c33a98"
         },
         "validation": {
           "rows": 89,
-          "sha256": "dd22ed44fbbd87bd4216c6da4ee287547f1f1b264492b356897361fb140966b2"
+          "sha256": "e90eb3f2c4f363ebfd2e0c67658fba9d9082a65ced68b67bc649946c6e842c7a"
         }
       }
     },
@@ -1459,9 +1459,9 @@
   },
   "schema_version": 1,
   "sources": {
-    "dispute_eval_baseline.json": "2248c3fc662dea3c2caec9a363d7c2a56cb0544bac6d25a83a6ed3f79c771cfa",
+    "dispute_eval_baseline.json": "72bf919681ccf6c9b0e3555153711a09655edc7a60d8521fa0a799492d5fab87",
     "injection_eval.json": "f408ff05190d4d4cc635f84efd3f97549d3d65c260a00418abd80e90f6b67574",
-    "trust_eval.json": "956101b9c3ed8756ab94f95081c3c7b389a6758597504afd6f7b255375b5483b"
+    "trust_eval.json": "e0fe8e8e458d1377a75a7989d1d0e84630250c0e80b1cb00767617d0e4e451cd"
   },
   "time_study": {
     "reason": "no timed analyst sessions yet: copy docs/time_study_template.json to data/time_study.json and fill it in",
@@ -1470,9 +1470,9 @@
   "trust": {
     "latency": {
       "budget_ms": 50,
-      "max_ms": 2.8478369999902498,
-      "mean_ms": 0.3803266688943728,
-      "p95_ms": 0.5350466999857416,
+      "max_ms": 2.390378000001192,
+      "mean_ms": 0.37330310033506975,
+      "p95_ms": 0.5430579999881499,
       "samples": 299,
       "within_budget": true
     },

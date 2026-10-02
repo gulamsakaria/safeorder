@@ -46,13 +46,13 @@ dispute:
     out_dir: data/cases
     # Which sources fill which split. A source is the `source` field of a record
     # (a raw file is one batch). A source that is not listed stops the split script.
-    # claude_* are written by the assistant (see raw/PROVENANCE.md); chatgpt, gemini and team are
+    # ai_* are written by the assistant (see raw/PROVENANCE.md); chatgpt, gemini and team are
     # for the files the team may add later.
     roles:
-      train: [chatgpt, claude_a]
-      test1: [gemini, claude_b]
-      test2: [team, claude_c]
-      injection: [claude_inj]
+      train: [chatgpt, ai_a]
+      test1: [gemini, ai_b]
+      test2: [team, ai_c]
+      injection: [ai_inj]
     validation_batch_suffix: _val    # batches named ..._val are the validation split
   baseline:
     seed: 42

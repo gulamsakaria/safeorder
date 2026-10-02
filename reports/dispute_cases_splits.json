@@ -21,7 +21,7 @@
         "standard": 10
       },
       "by_source": {
-        "claude_inj": 24
+        "ai_inj": 24
       },
       "by_subtype": {
         "BF1": 2,
@@ -58,7 +58,7 @@
         "standard": 106
       },
       "by_source": {
-        "claude_b": 310
+        "ai_b": 310
       },
       "by_subtype": {
         "BF1": 20,
@@ -94,7 +94,7 @@
         "standard": 131
       },
       "by_source": {
-        "claude_c": 244
+        "ai_c": 244
       },
       "by_subtype": {
         "BF1": 15,
@@ -132,7 +132,7 @@
         "standard": 129
       },
       "by_source": {
-        "claude_a": 383
+        "ai_a": 383
       },
       "by_subtype": {
         "BF1": 24,
@@ -168,7 +168,7 @@
         "regional": 44
       },
       "by_source": {
-        "claude_a": 89
+        "ai_a": 89
       },
       "by_subtype": {
         "BF1": 6,

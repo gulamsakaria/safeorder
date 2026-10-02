@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Author of every `claude_*` file | the Claude AI assistant (Anthropic), working in this repository, on 2026-10-02 |
+| Author of every `ai_*` file | the AI coding assistant used in this repository, on 2026-10-02 |
 | Method | texts written by the assistant in `scripts/case_bank/`; combined with seeded random choices (product, amount, courier status, small adornments) by `scripts/make_cases.py` (seed 20261001) |
 | NOT used | ChatGPT, Gemini, any other tool; real people's messages, names, phone numbers, brands |
 | Prompt | none: the assistant wrote the texts directly; there is no master prompt to record |
@@ -17,10 +17,10 @@ optimistic for other authors and for real disputes (see `docs/dataset_card_dispu
 
 | Source (`source` field) | Role | Files |
 |---|---|---|
-| `claude_a` | train (`..._val` files: validation) | `claude_a_<SUBTYPE>.jsonl`, `claude_a_<SUBTYPE>_val.jsonl` |
-| `claude_b` | Test 1 | `claude_b_<SUBTYPE>.jsonl` |
-| `claude_c` | Test 2 | `claude_c_<SUBTYPE>.jsonl` |
-| `claude_inj` | injection set (never trained on) | `injection_claude_inj_<LABEL>.jsonl` |
+| `ai_a` | train (`..._val` files: validation) | `ai_a_<SUBTYPE>.jsonl`, `ai_a_<SUBTYPE>_val.jsonl` |
+| `ai_b` | Test 1 | `ai_b_<SUBTYPE>.jsonl` |
+| `ai_c` | Test 2 | `ai_c_<SUBTYPE>.jsonl` |
+| `ai_inj` | injection set (never trained on) | `injection_ai_inj_<LABEL>.jsonl` |
 
 ## Adding the team's own cases
 

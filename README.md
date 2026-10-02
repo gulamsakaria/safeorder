@@ -4,7 +4,7 @@ AI-assisted seller trust, held payments and dispute resolution for Facebook-comm
 Prototype for AI Dev Fest 2026 (AI Hackathon). Everything runs on **synthetic data inside a
 simulated (sandbox) wallet**. No real money, no real customer data, not a product of upay.
 
-Full specification: [BLUEPRINT.md](BLUEPRINT.md). Working rules: [CLAUDE.md](CLAUDE.md).
+Full specification: [BLUEPRINT.md](BLUEPRINT.md). Working rules: [WORKING_RULES.md](WORKING_RULES.md).
 Decisions, measurements and caveats: [DECISIONS.md](DECISIONS.md). Runbook: [RUNBOOK.md](RUNBOOK.md).
 Model cards, dataset cards, evaluation protocol: [docs/](docs/README.md).
 

@@ -2,7 +2,7 @@
 
 Usage (repository root): PYTHONPATH=backend:. python -m scripts.make_cases
 
-**Provenance, stated plainly:** every text in ``scripts/case_bank`` was written by the Claude
+**Provenance, stated plainly:** every text in ``scripts/case_bank`` was written by the AI
 assistant in this repository, not by ChatGPT, not by Gemini, not by the team. This script only
 combines those texts with seeded random choices (product, amount, courier status, small
 adornments). So the three "sources" below share one author: the cross-source test the blueprint
@@ -11,8 +11,8 @@ reproduced. What the split does guarantee is that no claim text and no combinati
 for a test appears in training. When the team's own cases are added to raw/ (source ``team``), they
 join Test 2 and are reported separately.
 
-Sources and their role: claude_a trains (and a ``_val`` part validates), claude_b is Test 1,
-claude_c is Test 2, claude_inj is the injection set (never trained on).
+Sources and their role: ai_a trains (and a ``_val`` part validates), ai_b is Test 1,
+ai_c is Test 2, ai_inj is the injection set (never trained on).
 """
 
 import json
@@ -149,24 +149,24 @@ def injection_cases(rng: random.Random) -> dict[str, list[dict[str, Any]]]:
         rows = []
         for number in range(1, 7):
             subtype = sorted(group)[(number - 1) % len(group)]
-            case = make_case(rng, "test2", subtype, "claude_inj", number)
+            case = make_case(rng, "test2", subtype, "ai_inj", number)
             seller_side = label == "COURIER_ISSUE" and number % 2 == 0
             sentence = rng.choice(injection.SELLER_SIDE if seller_side else injection.BUYER_SIDE)
             field = "seller_evidence" if seller_side else "buyer_evidence"
             case[field] = f"{case[field]} {sentence}".strip()
             case["injection_text"] = sentence
             case["has_injection"] = True
-            case["id"] = f"claude_inj-{label}-{number:03d}"
+            case["id"] = f"ai_inj-{label}-{number:03d}"
             rows.append(case)
         out[label] = rows
     return out
 
 
 PLAN = (  # (source, part, per sub-type, batch suffix)
-    ("claude_a", "train", 24, ""),
-    ("claude_a", "val", 6, "_val"),
-    ("claude_b", "test1", 20, ""),
-    ("claude_c", "test2", 20, ""),
+    ("ai_a", "train", 24, ""),
+    ("ai_a", "val", 6, "_val"),
+    ("ai_b", "test1", 20, ""),
+    ("ai_c", "test2", 20, ""),
 )
 
 
@@ -174,7 +174,7 @@ PROVENANCE = """# Provenance of the case files in this folder
 
 | Item | Value |
 |---|---|
-| Author of every `claude_*` file | the Claude AI assistant (Anthropic), working in this repository, on {date} |
+| Author of every `ai_*` file | the AI coding assistant used in this repository, on {date} |
 | Method | texts written by the assistant in `scripts/case_bank/`; combined with seeded random choices (product, amount, courier status, small adornments) by `scripts/make_cases.py` (seed {seed}) |
 | NOT used | ChatGPT, Gemini, any other tool; real people's messages, names, phone numbers, brands |
 | Prompt | none: the assistant wrote the texts directly; there is no master prompt to record |
@@ -189,10 +189,10 @@ optimistic for other authors and for real disputes (see `docs/dataset_card_dispu
 
 | Source (`source` field) | Role | Files |
 |---|---|---|
-| `claude_a` | train (`..._val` files: validation) | `claude_a_<SUBTYPE>.jsonl`, `claude_a_<SUBTYPE>_val.jsonl` |
-| `claude_b` | Test 1 | `claude_b_<SUBTYPE>.jsonl` |
-| `claude_c` | Test 2 | `claude_c_<SUBTYPE>.jsonl` |
-| `claude_inj` | injection set (never trained on) | `injection_claude_inj_<LABEL>.jsonl` |
+| `ai_a` | train (`..._val` files: validation) | `ai_a_<SUBTYPE>.jsonl`, `ai_a_<SUBTYPE>_val.jsonl` |
+| `ai_b` | Test 1 | `ai_b_<SUBTYPE>.jsonl` |
+| `ai_c` | Test 2 | `ai_c_<SUBTYPE>.jsonl` |
+| `ai_inj` | injection set (never trained on) | `injection_ai_inj_<LABEL>.jsonl` |
 
 ## Adding the team's own cases
 
@@ -227,7 +227,7 @@ def main() -> None:
             write(f"{source}_{subtype}{suffix}", rows)
             total += len(rows)
     for label, rows in injection_cases(rng).items():
-        write(f"injection_claude_inj_{label}", rows)
+        write(f"injection_ai_inj_{label}", rows)
         total += len(rows)
     write_provenance()
     print(f"wrote {total} cases into raw/")

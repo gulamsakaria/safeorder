@@ -12,10 +12,10 @@
     "standard": 376
   },
   "by_source": {
-    "claude_a": 472,
-    "claude_b": 310,
-    "claude_c": 244,
-    "claude_inj": 24
+    "ai_a": 472,
+    "ai_b": 310,
+    "ai_c": 244,
+    "ai_inj": 24
   },
   "by_subtype": {
     "BF1": 67,

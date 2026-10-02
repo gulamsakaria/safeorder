@@ -35,9 +35,9 @@
 ## Dispute classifier and routing
 
 1. **Data:** assistant-written cases (see the dataset card); every split has the same author.
-2. **Splits:** by source and batch. Train = `claude_a` batches; validation = its `_val` batches
-   (used only to fit the probability calibration); Test 1 = `claude_b`; Test 2 = `claude_c`; the
-   injection set = `claude_inj`. Cases from `chatgpt`, `gemini` and `team` sources would fill the same
+2. **Splits:** by source and batch. Train = `ai_a` batches; validation = its `_val` batches
+   (used only to fit the probability calibration); Test 1 = `ai_b`; Test 2 = `ai_c`; the
+   injection set = `ai_inj`. Cases from `chatgpt`, `gemini` and `team` sources would fill the same
    roles (`dispute.cases.roles`). A claim text or a story (combination of source texts) never appears
    in two of train, validation, Test 1 and Test 2; the split script enforces it and tests check it.
 3. **No tuning on test:** the hyperparameters in the config were set once, before the first

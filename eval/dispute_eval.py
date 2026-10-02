@@ -40,7 +40,7 @@ T0 = datetime(2026, 9, 28, 9, 10, tzinfo=UTC)
 HOUR = timedelta(hours=1)
 MS = 1_000.0
 NOTE = (
-    "Cases were written by the Claude assistant, not by ChatGPT, Gemini or the team. All splits "
+    "Cases were written by the AI assistant, not by ChatGPT, Gemini or the team. All splits "
     "share one author, so the scores show that the pipeline works and that wording unseen in "
     "training is handled; they are NOT evidence of how the model would do on cases written by "
     "other people or on real disputes. Test 2 holds few distinct stories (see distinct_stories). "

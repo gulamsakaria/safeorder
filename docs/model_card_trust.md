@@ -60,7 +60,7 @@ On the easier *clean* label (diagnostic only): model PR-AUC 0.997, so the
 headline above is the more honest number. Validation PR-AUC on the held-out part of v1:
 0.909.
 
-Speed: p95 0.54 ms, max 2.85 ms per Trust Check against a budget of
+Speed: p95 0.54 ms, max 2.39 ms per Trust Check against a budget of
 50 ms (299 samples).
 
 Calibration bins on v2 (noisy label):
