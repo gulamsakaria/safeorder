@@ -189,6 +189,14 @@ Calibration bins on v2 (noisy label):
 
 {calibration}
 
+## What the model relies on
+
+Exact tree SHAP values (LightGBM `pred_contrib`) on generator v2 are in
+`reports/figures/trust_feature_importance.png` (average size per feature) and
+`reports/figures/trust_one_seller.png` (one seller). The model leans mostly on cash-out speed and on
+how far order prices are above the category norm, which are exactly the behaviours the synthetic
+generator gives the fake sellers: a reminder that it has learned our assumptions.
+
 ## Fairness check (honest new sellers)
 
 The blueprint hides every account younger than 14 days behind LIMITED_HISTORY. In the generated

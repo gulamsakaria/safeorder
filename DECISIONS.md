@@ -501,3 +501,18 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
   must do it). The team's own Test 2 cases.
 - **Open question for a person:** the assistant's terms on using its output to train another model,
   even a small linear classifier (licence register).
+
+
+## After the freeze: SHAP figures and an accessibility pass
+
+- `reports/figures/trust_feature_importance.png` and `trust_one_seller.png`: exact tree SHAP values
+  (LightGBM `pred_contrib`) of the trust model on generator v2. The model leans mostly on cash-out
+  speed and on order prices above the category norm, which are exactly the behaviours the generator
+  gives fake sellers, so the figure also shows that the model has learned our assumptions. The model
+  card links to both figures.
+- **Accessibility:** axe-core (WCAG 2 A and AA plus best practice) on 10 screens in Bangla and English
+  at 390 px width found 3 problems: the score meter had no accessible name, the ledger table had an
+  empty header cell, and the scrollable metrics tables could not be reached with the keyboard. All
+  three are fixed; the re-run gives 0 violations and no horizontal overflow (`scripts/a11y_check.mjs`).
+  This is an automated check: it does not replace trying the screens with a screen reader or on a
+  real phone.

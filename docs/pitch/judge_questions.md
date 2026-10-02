@@ -30,7 +30,7 @@ A person confirms every refund. The classifier would suggest a refund for 5.3% (
 
 **Why not use a large language model?**
 
-A generative model in the decision path is hard to audit, can be steered by the very text it reads, and the guideline asks to keep rules and predictions apart. A small model plus rules is explainable, fast (6.8 ms per dispute) and runs privately.
+A generative model in the decision path is hard to audit, can be steered by the very text it reads, and the guideline asks to keep rules and predictions apart. A small model plus rules is explainable, fast (4.3 ms per dispute) and runs privately.
 
 **Did you use a transformer?**
 

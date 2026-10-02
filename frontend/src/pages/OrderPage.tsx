@@ -151,7 +151,7 @@ export function OrderPage() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="text-slate-600">
-              <th className="py-1">&nbsp;</th>
+              <th className="py-1"><span className="sr-only">{t('ledger.entry')}</span></th>
               <th className="py-1">{t('ledger.debit')}</th>
               <th className="py-1">{t('ledger.credit')}</th>
             </tr>

@@ -24,7 +24,7 @@ new validation on governed data.
   (`backend/app/disputes/text_format.py`). Instruction-like sentences are removed first by the
   injection screen (see the responsible-AI note for how far that goes).
 - Libraries: joblib 1.6.0, numpy 2.4.6, scikit-learn 1.9.1; trained 2026-10-02.
-- Speed: p95 6.8 ms, max 8.5 ms per prediction (budget 100 ms).
+- Speed: p95 4.3 ms, max 6.5 ms per prediction (budget 100 ms).
 
 ## Training data
 

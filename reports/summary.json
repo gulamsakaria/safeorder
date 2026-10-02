@@ -20,9 +20,9 @@
       },
       "latency": {
         "budget_ms": 100,
-        "max_ms": 8.51018900004874,
-        "mean_ms": 4.903719410002243,
-        "p95_ms": 6.779620149990251,
+        "max_ms": 6.518489999962185,
+        "mean_ms": 3.773796653331184,
+        "p95_ms": 4.298161799985678,
         "samples": 300,
         "within_budget": true
       },
@@ -1459,7 +1459,7 @@
   },
   "schema_version": 1,
   "sources": {
-    "dispute_eval_baseline.json": "684ddeb3cccfa5f5e4ac2a74749f6df766b1a9c1cf2dd742795d99d535961edb",
+    "dispute_eval_baseline.json": "2248c3fc662dea3c2caec9a363d7c2a56cb0544bac6d25a83a6ed3f79c771cfa",
     "injection_eval.json": "f408ff05190d4d4cc635f84efd3f97549d3d65c260a00418abd80e90f6b67574",
     "trust_eval.json": "956101b9c3ed8756ab94f95081c3c7b389a6758597504afd6f7b255375b5483b"
   },

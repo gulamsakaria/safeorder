@@ -29,7 +29,7 @@ function statusOf(summary: Summary, section: string): string | undefined {
 
 function Table({ head, rows, label }: { head: string[]; rows: ReactNode[][]; label: string }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" role="region" aria-label={label} tabIndex={0}>
       <table className="w-full min-w-[28rem] text-left text-sm" aria-label={label}>
         <thead>
           <tr className="border-b border-slate-300 text-slate-600">

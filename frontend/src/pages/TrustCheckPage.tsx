@@ -36,6 +36,7 @@ function ScoreMeter({ score }: { score: number }) {
       <div
         className="mt-2 h-3 w-full rounded-full bg-slate-200"
         role="meter"
+        aria-label={t('check.score')}
         aria-valuenow={score}
         aria-valuemin={0}
         aria-valuemax={SCORE_MAX}

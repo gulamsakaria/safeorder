@@ -7,6 +7,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
 
 INK, MUTED, GRID, SURFACE = "#0b0b0b", "#52514e", "#e6e5e1", "#fcfcfb"
 BLUE, ORANGE = "#2a78d6", "#eb6834"  # blue = the model, orange = the simple baseline
@@ -146,12 +147,73 @@ def dispute_confusion(summary: dict[str, Any], out: Path) -> Path:
     return _save(fig, out / "dispute_confusion_test1.png")
 
 
+def trust_contributions(out: Path) -> list[Path]:
+    """Exact TreeSHAP contributions (LightGBM ``pred_contrib``) of the trust model on generator v2.
+
+    Two figures: the average size of each feature's contribution, and the contributions for one
+    seller (the highest-risk seller of v2). Positive = pushes toward high risk.
+    """
+    from app.config import load_config
+    from app.trust.dataset import REPO_ROOT, load_features
+    from app.trust.model import TrustModel
+
+    cfg = load_config()
+    model = TrustModel.load(
+        REPO_ROOT / cfg["paths"]["models_dir"] / f"{cfg['trust_model']['version']}.joblib"
+    )
+    features = load_features("v2")
+    matrix = model._matrix(features)
+    contrib = model.contributions(matrix)
+    names = model.feature_columns
+
+    mean_abs = np.abs(contrib).mean(axis=0)
+    order = np.argsort(mean_abs)
+    fig, ax = plt.subplots(figsize=(6.4, 4.6))
+    ax.barh([names[i] for i in order], mean_abs[order], color=BLUE)
+    ax.set_xlabel("Mean absolute contribution (log-odds of high risk)")
+    ax.set_title("What the trust model relies on (generator v2)", loc="left", fontsize=12)
+    fig.text(
+        0.01,
+        -0.03,
+        "Exact tree SHAP values on synthetic data; not validated on real data.",
+        color=MUTED,
+        fontsize=9,
+    )
+    first = _save(fig, out / "trust_feature_importance.png")
+
+    probability = model.predict_proba(features)
+    top = int(np.argmax(probability))
+    row = contrib[top]
+    order = np.argsort(np.abs(row))[-8:]
+    fig, ax = plt.subplots(figsize=(6.4, 4.2))
+    colours = [ORANGE if row[i] > 0 else BLUE for i in order]
+    ax.barh([names[i] for i in order], [row[i] for i in order], color=colours)
+    ax.axvline(0, color=MUTED, linewidth=1)
+    ax.set_xlabel("Contribution (log-odds): right = riskier")
+    ax.set_title(
+        f"Why one seller scores high risk ({features.index[top]})", loc="left", fontsize=12
+    )
+    fig.text(
+        0.01,
+        -0.03,
+        "Orange = raises risk, blue = lowers risk. Synthetic data.",
+        color=MUTED,
+        fontsize=9,
+    )
+    second = _save(fig, out / "trust_one_seller.png")
+    return [first, second]
+
+
 def make_all(summary: dict[str, Any], out: Path) -> list[Path]:
     """Draw every figure whose data exists; nothing is drawn for a section that is not measured."""
     _style()
     written: list[Path] = []
     if summary["trust"].get("status") == "measured":
         written += [trust_comparison(summary, out), calibration(summary, out)]
+        try:
+            written += trust_contributions(out)
+        except FileNotFoundError:  # the generated seller data is not on this machine
+            pass
     if summary["fairness"].get("status") == "measured":
         written.append(policy_recall(summary, out))
     if summary["dispute_classifier"].get("status") == "measured":
