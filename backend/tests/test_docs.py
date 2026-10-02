@@ -83,3 +83,52 @@ def test_dispute_documents_state_the_single_author_limit() -> None:
         assert "written by the ai assistant" in text or "written by the ai" in text
         assert "not" in text and "chatgpt" in text
     assert "no human has reviewed" in DOCUMENTS["dispute_dataset_card"]().lower()
+
+
+# ---- pitch material and drafts ---------------------------------------------------------------
+
+from scripts import build_pitch  # noqa: E402
+
+PITCH = {
+    "pitch/demo_script.md": build_pitch.demo_script,
+    "pitch/pitch_outline.md": build_pitch.pitch_outline,
+    "pitch/judge_questions.md": build_pitch.judge_questions,
+    "drafts/logic_chain.md": build_pitch.logic_chain,
+    "drafts/safe_order_terms.md": build_pitch.terms,
+}
+STATIC = {
+    "drafts/interview_consent_note.md": build_pitch.consent_note,
+    "drafts/team_agreement_outline.md": build_pitch.team_agreement,
+    "drafts/regulatory_note.md": build_pitch.regulatory_note,
+    "drafts/organiser_questions.md": build_pitch.organiser_questions,
+}
+
+
+def render(name: str) -> str:
+    facts = build_pitch.Facts(CFG)
+    if name in PITCH:
+        return PITCH[name](facts)
+    return STATIC[name]()
+
+
+@pytest.mark.parametrize("name", [*PITCH, *STATIC])
+def test_pitch_files_are_current_marked_as_drafts_and_complete(name: str) -> None:
+    text = render(name)
+    assert (build_pitch.DOCS / name).read_text(encoding="utf-8") == text, (
+        f"docs/{name} is stale: run `make docs`"
+    )
+    assert "DRAFT" in text and "not legal advice" in text.lower()
+    assert "{" not in text and "}" not in text and "None%" not in text
+
+
+def test_pitch_numbers_come_from_the_reports_and_the_limits_are_stated() -> None:
+    import json
+
+    report = json.loads((build_pitch.REPO / "reports" / "dispute_eval_baseline.json").read_text())
+    outline = render("pitch/pitch_outline.md")
+    assert f"{report['splits']['test1']['macro_f1']:.2f}" in outline
+    assert "written by an AI" in outline and "one author" in outline
+    assert "not measured" in outline  # impact is not measured
+    questions = render("pitch/judge_questions.md")
+    assert "Who wrote the dispute cases" in questions and "AI assistant wrote them" in questions
+    assert "not a defence" in questions

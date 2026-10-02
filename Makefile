@@ -62,6 +62,7 @@ deploy-space:
 
 docs:
 	PYTHONPATH=backend:. $(PY) -m scripts.build_docs
+	PYTHONPATH=backend:. $(PY) -m scripts.build_pitch
 
 kaggle:
 	PYTHONPATH=backend:. $(PY) -m scripts.build_kaggle
