@@ -172,3 +172,103 @@ served with), `frontend/package.json` and `frontend/package-lock.json`.
 | Frontend | React 19.3 (`^19.2.8`), React Router 7.18.4, Vite 8.3.2, Tailwind CSS 4.3.3, openapi-fetch 0.17, three.js 0.186.1 (the 3D look of the app) |
 | Tests and quality | pytest 9.1.1, ruff, Vitest 5.0.3, Testing Library, MSW 2.15, oxlint |
 | Services | Render (Docker web service for the API), Neon (PostgreSQL), a cPanel host (static website), Hugging Face Spaces (optional one-container deployment), Kaggle (explainer notebook and a private model dataset; optional) |
+
+---
+
+## 4. Requirements
+
+| | |
+|---|---|
+| **Python** | 3.11 (the Dockerfile image and the `ruff` target). The author ran everything on 3.12.10 on Windows 11. The Makefile calls `python3.11` in `make setup`. |
+| **Node.js** | 20.19 or newer, or 22.12 or newer (Vite 8 requires it; Vitest 5 needs 22.12+ or 24+). The Dockerfile uses `node:22-slim`; the author ran Node 24.21.0 and npm 11.19.0. |
+| **Operating system** | Linux or macOS for `make` as written. Windows: use the PowerShell commands in section 5 (the Makefile uses `.venv/bin/python` and Unix environment-variable syntax). |
+| **Optional tools** | `make` (any GNU Make), Docker (only for the container), Git. A Kaggle or Hugging Face account only for the optional upload scripts. |
+| **Disk** | About 1 GB free. Measured in a fresh clone: virtual environment about 530 MB, `frontend/node_modules` about 227 MB, generated data about 57 MB (13.8 MB of it the SQLite file), the repository itself about 25 MB with history. |
+| **Memory** | `RUNBOOK.md` records that the deployed service peaks near 300 MB on a 512 MB Render free instance (the author's note, not re-measured for this README). |
+| **Network** | Needed for `pip install`, `npm install` and the live demo. After installation nothing in the app calls an external API. The only third-party request a browser makes is the Google Fonts stylesheet for the Noto Sans Bengali font; the text falls back to a system font without it. |
+
+What works without a network once installed: the API, all tests, the evaluation, the classic UI in mock
+mode, and the in-browser static site.
+
+---
+
+## 5. Installation and setup
+
+### The shortest way (any operating system)
+
+`python run_local.py` does everything below for you (virtual environment, the **pinned** packages of
+`requirements-runtime.txt`, the synthetic data, the server and the browser); see "For judges" at the top.
+The rest of this section is the manual way, which also installs the development tools (pytest, ruff).
+
+Synthetic data is **not committed** (it is regenerated from fixed seeds), so `make data` is a required
+step. The trained models (`models/*.joblib`) **are committed**, so `make train` is optional.
+
+### Linux or macOS (with `make`)
+
+```bash
+git clone https://github.com/gulamsakaria/safeorder.git
+cd safeorder
+
+make setup      # python3.11 -m venv .venv; pip install -r requirements.txt; cd frontend && npm install
+make data       # generates the synthetic sellers (about 15 s) and loads them into data/safeorder.db
+```
+
+Then `make api` and `make web` (section 7) give you a running app. Optional steps:
+
+```bash
+make train           # retrain the trust model (models are already committed)
+make cases           # validate and split the dispute cases in raw/ -> data/cases/
+make train-dispute   # retrain the dispute classifier
+make eval            # regenerate reports/*.json, reports/summary.json and the figures
+make demo-reset      # reset the database and load the seven demo scenarios
+```
+
+If you only have another Python 3.11+ than `python3.11`, create the environment yourself
+(`python3 -m venv .venv`) and continue with `make` as usual.
+
+### Windows (PowerShell, without `make`)
+
+These commands were run in a fresh clone, in this order, on Windows 11 with Python 3.12.10 and Node 24.21.0.
+
+```powershell
+git clone https://github.com/gulamsakaria/safeorder.git
+cd safeorder
+
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt     # about 90 s
+cd frontend; npm install; cd ..                                   # about 10 s
+
+# Use UTF-8 for Python (the repository holds Bangla text; without this some tests fail on Windows).
+$env:PYTHONUTF8 = "1"
+# Python looks for the project packages here (the Makefile sets this to "backend:." on Linux).
+$env:PYTHONPATH = "backend;."
+
+# make data  (about 15 s)
+.\.venv\Scripts\python.exe -m scripts.generate_sellers --version both --load-db
+```
+
+Equivalent commands for the other `make` targets (keep the two environment variables above set):
+
+| `make ...` | PowerShell |
+|---|---|
+| `train` | `.\.venv\Scripts\python.exe -m scripts.train_trust` |
+| `cases` | `.\.venv\Scripts\python.exe -m scripts.validate_cases` then `-m scripts.split_cases` |
+| `train-dispute` | `.\.venv\Scripts\python.exe -m scripts.train_dispute` |
+| `eval` | `.\.venv\Scripts\python.exe -m eval.run_all` |
+| `demo-reset` | `.\.venv\Scripts\python.exe -m scripts.seed_demo` |
+| `test` | `.\.venv\Scripts\python.exe -m pytest -q` and `.\.venv\Scripts\python.exe -m ruff check .` |
+| `secret-scan` | `.\.venv\Scripts\python.exe -m scripts.secret_scan` |
+| `openapi` | `.\.venv\Scripts\python.exe -m scripts.export_openapi` |
+| `static-data` | `.\.venv\Scripts\python.exe -m scripts.export_static` |
+
+Known Windows quirks (the code is unchanged; these are limits of running it on Windows):
+
+- Without `PYTHONUTF8=1`, six tests that read Bangla files fail with `UnicodeDecodeError`.
+- `make rehearse` and `make static-data` finish their work and then stop with a `PermissionError` while
+  deleting a temporary SQLite file (Windows keeps it open). See sections 7 and 9.
+- Scripts that write text files write Windows line endings; `.gitattributes` makes Git store LF.
+
+### After changing the database models
+
+Tables are created with `create_all`, which does not migrate. Delete `data/safeorder.db` (it is not in
+Git) and run `make data` again.
