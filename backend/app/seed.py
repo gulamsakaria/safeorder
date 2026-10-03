@@ -116,6 +116,32 @@ def reset_and_load(
     return load_from_files(engine, config)
 
 
+def load_sample(engine: Engine, cfg: dict[str, Any] | None = None) -> dict[str, int]:
+    """Load a small, fixed sample of the synthetic sellers: a few of every kind (honest, new,
+    fake burst, slow scammer, ring, poor service), with their trust features and daily stats.
+
+    It is enough for the Trust Check to show examples of safe and risky sellers, and loads in
+    seconds. No synthetic buyers are loaded: the accounts of real people are the buyers."""
+    config = cfg or load_config()
+    directory = REPO_ROOT / config["paths"]["synthetic_dir"] / "v1"
+    needed = ("sellers.csv", "buyers.csv", "seller_daily_stats.csv")
+    if not all((directory / name).exists() for name in needed):
+        raise SyntheticDataMissing("generated data not found: run `make data` first")
+    from app.trust.dataset import load_features
+
+    per_kind = config["wallet"]["sample_sellers_per_archetype"]
+    sellers = pd.read_csv(directory / "sellers.csv").sort_values("id")
+    sample = sellers.groupby("archetype", sort=True).head(per_kind)
+    ids = set(sample["id"])
+    stats = pd.read_csv(directory / "seller_daily_stats.csv")
+    stats = stats[stats["seller_id"].isin(ids)]
+    buyers = pd.read_csv(directory / "buyers.csv").iloc[0:0]
+    features = load_features("v1")
+    features = features.loc[features.index.isin(ids)]
+    load_synthetic(engine, sample, buyers, stats, features, config["generator"]["as_of"])
+    return {"sellers": len(sample), "buyers": 0}
+
+
 def load_from_files(engine: Engine, cfg: dict[str, Any] | None = None) -> dict[str, int]:
     """Load the generated synthetic sellers, buyers, daily stats and trust features (no reset)."""
     config = cfg or load_config()

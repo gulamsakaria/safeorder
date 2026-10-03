@@ -125,9 +125,12 @@ keeps its data in a Postgres database that survives restarts.
    (`postgresql://user:password@host/dbname?sslmode=require`). Keep it private.
 2. **Render.** New + -> Blueprint -> this repository. Fill the three secrets Render asks for:
    `DATABASE_URL` (the Neon link), `SAFEORDER_ADMIN_PHONE` (for example `01900000000`) and
-   `SAFEORDER_ADMIN_PIN` (5 digits). Press Apply. The first start loads the 3,000 synthetic sellers
-   and the demo scenarios into the empty database (about a minute); registration answers
-   "starting" until it is done. Later starts keep everything.
+   `SAFEORDER_ADMIN_PIN` (5 digits). Press Apply. The first start loads a small sample of synthetic
+   sellers (72, a few of every kind, so the seller check has examples) into the empty database in
+   seconds. Later starts keep everything. Set `SAFEORDER_FULL_DEMO=1` only if you want all 3,000
+   synthetic sellers and the seven old demo stories (about 15 minutes on a free host; registration
+   answers "starting" meanwhile). Never change `DATABASE_URL` on a running site: a new, empty
+   database means a new start and the accounts of the old one are gone.
 3. **Check.** `<render address>/health` shows `{"status":"ok"}`. Sign in on the website with the admin
    number and PIN: the admin panel is under "More".
 4. **Website.** Upload `site.zip` to the sub-domain folder (see the cPanel section above) and set

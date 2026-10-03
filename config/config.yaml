@@ -92,6 +92,7 @@ wallet:
   session_days: 30
   proof_image_max_chars: 400000    # base64 text; the website shrinks photos before sending
   upload_max_body_bytes: 600000    # only for the proof upload route
+  sample_sellers_per_archetype: 12 # a new persistent database gets only a small sample of synthetic sellers
 
 # Serving the built frontend from the API (SAFEORDER_SERVE_FRONTEND=1), for a one-address deployment.
 web:

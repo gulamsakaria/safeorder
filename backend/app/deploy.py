@@ -12,6 +12,8 @@ Environment variables (all optional):
   SAFEORDER_CORS_ORIGINS=a,b   allowed browser origins
   SAFEORDER_PERSIST=1          keep the database between restarts (set DATABASE_URL for Postgres):
                                real accounts, nothing is wiped; demo data is loaded only when empty
+  SAFEORDER_FULL_DEMO=1        with PERSIST: load all 3,000 synthetic sellers and the seven demo
+                               stories (slow on a small host); by default a small sample of sellers
   SAFEORDER_PROTECT_ADMIN=1    the analyst console and /api/sim, /api/demo need an admin account
   SAFEORDER_ADMIN_PHONE, SAFEORDER_ADMIN_PIN   create or update the admin account on start
   DATABASE_URL                 a Postgres link, for example from Neon (otherwise SQLite is used)
@@ -110,7 +112,7 @@ def start_persistent(app: FastAPI) -> None:
     from app.auth import ensure_admin_account
     from app.demo_scenarios import load_demo_scenarios
     from app.models import Order, Seller
-    from app.seed import SyntheticDataMissing, load_from_files
+    from app.seed import SyntheticDataMissing, load_from_files, load_sample
     from app.trust.model import TrustModel
 
     logging.basicConfig(level=logging.INFO)
@@ -127,8 +129,9 @@ def start_persistent(app: FastAPI) -> None:
         app.state.starting = empty
         logger.info("persistent start: database %s", "empty, loading" if empty else "has data")
         if empty:
+            full = env_flag("SAFEORDER_FULL_DEMO")
             try:
-                loaded = load_from_files(engine, cfg)
+                loaded = load_from_files(engine, cfg) if full else load_sample(engine, cfg)
                 logger.info("synthetic sellers loaded: %s", loaded)
                 version = cfg["trust_model"]["version"]
                 path = REPO_ROOT / cfg["paths"]["models_dir"] / f"{version}.joblib"
@@ -136,7 +139,7 @@ def start_persistent(app: FastAPI) -> None:
                 app.state.trust_model = model
                 with Session(engine) as session:
                     has_orders = session.exec(select(func.count()).select_from(Order)).one() > 0
-                if not has_orders:
+                if full and not has_orders:
                     scenarios = load_demo_scenarios(engine, model, app.state.classifier, cfg)
                     logger.info("demo scenarios loaded: %d", len(scenarios))
             except SyntheticDataMissing:
