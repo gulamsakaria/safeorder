@@ -65,10 +65,21 @@ def make_engine(url: str | None = None) -> Engine:
 
 def create_db(engine: Engine) -> None:
     SQLModel.metadata.create_all(engine)
-    statements = _APPEND_ONLY_TRIGGERS if engine.dialect.name == "sqlite" else _POSTGRES_TRIGGERS
+    if engine.dialect.name == "sqlite":
+        with engine.begin() as conn:
+            for statement in _APPEND_ONLY_TRIGGERS:
+                conn.execute(text(statement))
+        return
     with engine.begin() as conn:
-        for statement in statements:
-            conn.execute(text(statement))
+        # Replacing the trigger on every start needs a table lock that a busy older instance can
+        # hold for a long time; so it is created once, and a lock is never waited for long.
+        exists = conn.execute(
+            text("SELECT 1 FROM pg_trigger WHERE tgname = 'audit_log_no_change'")
+        ).first()
+        if exists is None:
+            conn.execute(text("SET LOCAL lock_timeout = '15s'"))
+            for statement in _POSTGRES_TRIGGERS:
+                conn.execute(text(statement))
 
 
 def reset_db(engine: Engine) -> None:

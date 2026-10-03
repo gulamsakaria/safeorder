@@ -115,7 +115,6 @@ def start_persistent(app: FastAPI) -> None:
 
     logging.basicConfig(level=logging.INFO)
     cfg = app.state.cfg
-    app.state.starting = True
     try:
         engine = app.state.engine
         if engine is None:
@@ -123,6 +122,10 @@ def start_persistent(app: FastAPI) -> None:
         create_db(engine)
         with Session(engine) as session:
             empty = session.exec(select(func.count()).select_from(Seller)).one() == 0
+        # ids are clash-free only if the synthetic data goes in before any account: hold
+        # registration back while that happens, but never on a database that already has data
+        app.state.starting = empty
+        logger.info("persistent start: database %s", "empty, loading" if empty else "has data")
         if empty:
             try:
                 loaded = load_from_files(engine, cfg)
