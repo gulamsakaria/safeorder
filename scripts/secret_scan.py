@@ -18,7 +18,7 @@ PATTERNS: dict[str, re.Pattern[str]] = {
         r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{30,}\b|\bgithub_pat_\w{40,}\b"
     ),
     "OpenAI-style key": re.compile(r"\bsk-[A-Za-z0-9_-]{32,}\b"),
-    "Anthropic key": re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b"),
+    "AI provider key": re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b"),
     "AWS access key id": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
     "Google API key": re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b"),
     "Slack token": re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}\b"),

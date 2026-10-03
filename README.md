@@ -48,6 +48,19 @@ Hugging Face Space (API + UI in one container) is the alternative.
 - Not done: the optional transformer classifier (Step 13), the team's own test cases, the 10%
   manual case review, the analyst time study, native-speaker review of the Bangla text.
 
+## Use of AI tools
+
+An AI coding assistant (Claude, by Anthropic) was used while building this project: it helped write
+parts of the code, the tests and the documents, and it wrote the synthetic dispute cases (see
+`raw/PROVENANCE.md`). This is a disclosure of a tool, not an author: the project and its content
+belong to its owner, who is responsible for them. Not everything the assistant wrote has been
+reviewed by a person yet (see "Honest status" above).
+
+AI is kept out of every decision about money. The machine-learning models and the evidence analyzer
+only **suggest**; rules in `rules.py` and `config/config.yaml` decide, and a human admin decides every
+dispute. Evidence text is treated as untrusted data and is never followed as an instruction. All data
+is synthetic or entered by testers in a sandbox with demo money, and no real personal data is used.
+
 ## Layout
 
 See BLUEPRINT.md Section 4. All thresholds live in `config/config.yaml`.
