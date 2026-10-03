@@ -11,6 +11,8 @@ services:
     envVars:
       - key: SAFEORDER_AUTOSEED          # reload the seven demo scenarios on every start
         value: "1"
+      - key: SAFEORDER_AUTOSEED_BACKGROUND # seed in a background thread so the port opens at once
+        value: "1"
       - key: SAFEORDER_TRUST_PROXY       # Render puts the visitor's address in X-Forwarded-For
         value: "1"
       - key: SAFEORDER_CORS_ORIGINS      # the website that may call this API
