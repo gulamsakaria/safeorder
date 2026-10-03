@@ -90,6 +90,9 @@ def seed_demo(app: FastAPI) -> None:
         engine = app.state.engine
         if engine is None:
             engine = app.state.engine = make_engine()
+        if engine.dialect.name != "sqlite":
+            logger.error("refusing to wipe a hosted database at start-up; use SAFEORDER_PERSIST=1")
+            return
         create_db(engine)
         loaded = reset_and_load(engine, "demo", cfg)
         path = REPO_ROOT / cfg["paths"]["models_dir"] / f"{cfg['trust_model']['version']}.joblib"
@@ -122,6 +125,11 @@ def start_persistent(app: FastAPI) -> None:
         if engine is None:
             engine = app.state.engine = make_engine()
         create_db(engine)
+        if engine.dialect.name == "sqlite" and os.environ.get("RENDER"):
+            logger.warning(
+                "DATABASE_URL is not set: accounts are kept in a file that Render wipes at every "
+                "restart. Set DATABASE_URL to a hosted Postgres (for example Neon)."
+            )
         with Session(engine) as session:
             empty = session.exec(select(func.count()).select_from(Seller)).one() == 0
         # ids are clash-free only if the synthetic data goes in before any account: hold

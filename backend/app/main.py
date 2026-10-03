@@ -61,6 +61,22 @@ def create_app(
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    @app.get("/health/db", include_in_schema=False)
+    def health_db() -> dict[str, Any]:
+        """Which database the service uses. A SQLite file inside a free host is wiped at every
+        restart, so accounts survive only with DATABASE_URL set to a hosted Postgres."""
+        from app.db import database_url_from_env
+
+        url = database_url_from_env()
+        kind = "sqlite"
+        if url is not None and not url.startswith("sqlite"):
+            kind = url.split(":")[0].split("+")[0]
+        return {
+            "database": kind,
+            "keeps_data": kind != "sqlite",
+            "persist_mode": config["api"].get("persist", False),
+        }
+
     prefix = config["api"]["base_path"]
     for module in (trust, orders, sim, disputes, metrics, demo, accounts, admin):
         app.include_router(module.router, prefix=prefix, responses=ERROR_RESPONSES)

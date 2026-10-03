@@ -89,3 +89,15 @@ def test_the_default_start_loads_only_a_small_sample_of_sellers(tmp_path, monkey
         assert {s.archetype for s in sellers} >= {"fake_burst", "honest_established"}
         assert len(session.exec(select(SellerFeatures)).all()) == len(sellers)
         assert session.exec(select(Buyer)).all() == []
+
+
+def test_health_db_says_whether_the_data_is_kept(tmp_path, monkeypatch) -> None:
+    engine = make_engine(f"sqlite:///{tmp_path / 'h.db'}")
+    create_db(engine)
+    client = TestClient(create_app(engine=engine, serve_frontend=False))
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    assert client.get("/health/db").json()["keeps_data"] is False
+    monkeypatch.setenv("DATABASE_URL", "postgres://user:secret@host/db")
+    body = client.get("/health/db").json()
+    assert body["database"] == "postgresql" and body["keeps_data"] is True
+    assert "secret" not in str(body)  # the link itself is never shown
