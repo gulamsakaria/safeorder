@@ -110,6 +110,31 @@ if you want the live site to show the real API (database, ledger, audit log).
 Check: browser F12 -> Network shows requests to the Render address; a red CORS error means the
 `SAFEORDER_CORS_ORIGINS` value on Render does not equal the website's address exactly (https, no slash).
 
+## Look and feel (3D background and motion)
+
+The interface has a dark animated 3D background (three.js, `frontend/src/components/Scene3D.tsx`),
+glass cards that tilt towards the pointer, and entrance animations (`frontend/src/index.css`, classes
+`so-*`). It is decoration only and never part of a decision:
+
+- three.js is a separate lazy-loaded file (about 130 KB gzipped), so the first screen does not wait for it.
+- It switches itself off where WebGL is missing (old phones, the test runner), and the animations stop
+  for visitors who set "reduce motion" in their system.
+- After a UI change rebuild the static site: run the commands of `npm run build:static` (see
+  `frontend/package.json`), then `python -m scripts.zip_site`, and upload `site.zip` again.
+
+## Render checklist (tested locally with the same settings)
+
+Before a demonstration, with the service set up as in "Website on a sub-domain that calls a backend on Render":
+
+1. `<render address>/health` answers `{"status":"ok"}`.
+2. `<render address>/api/analyst/queue` lists three disputes (the demo scenarios are loaded on start,
+   in a background thread, so wait about 10 to 60 seconds after a wake-up).
+3. `SAFEORDER_CORS_ORIGINS` is exactly `https://safeorder.stratifyxglobal.com` (https, no slash).
+4. `config.js` on the website holds the Render address, without a slash at the end.
+5. Run the tests on Linux or macOS, or with `PYTHONUTF8=1` on Windows. `.gitattributes` keeps LF line
+   endings: without it a Windows checkout turns files into CRLF and two tests (the dataset hash and the
+   site.zip comparison) fail even though the code is fine.
+
 ## Live demo on Hugging Face (free Space)
 
 One container serves the API and the frontend on one address. Do this on your own computer, where

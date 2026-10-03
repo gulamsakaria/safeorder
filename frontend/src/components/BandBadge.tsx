@@ -15,7 +15,7 @@ export function BandBadge({ band }: { band: Band }) {
   const style = STYLE[band]
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full border px-4 py-1 text-lg font-bold ${style.classes}`}
+      className={`so-pop inline-flex items-center gap-2 rounded-full border px-4 py-1 text-lg font-bold ${style.classes}`}
     >
       <span aria-hidden="true">{style.symbol}</span>
       {t(`band.${band}`)}

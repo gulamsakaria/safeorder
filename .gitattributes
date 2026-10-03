@@ -1,0 +1,7 @@
+# Keep LF line endings on every machine. The tests hash files and compare site/ with site.zip,
+# so a Windows checkout with CRLF would make them fail.
+* text=auto eol=lf
+*.zip binary
+*.joblib binary
+*.png binary
+*.mp4 binary
