@@ -1,7 +1,7 @@
 """Build the Kaggle bundle (dataset files) and the explainer notebook for the judges.
 
 Usage (repository root): PYTHONPATH=backend:. python -m scripts.build_kaggle
-  build/kaggle/dataset/   files for a PRIVATE Kaggle dataset "safeorder-trust-bundle"
+  build/kaggle/dataset/   files for a Kaggle dataset "safeorder-trust-bundle"
   kaggle/notebook/        the notebook plus kernel-metadata.json
 
 The bundle mirrors the repository layout (backend/app, config, models, reports, data) so the
@@ -517,7 +517,7 @@ def build_notebook() -> None:
                 "code_file": NOTEBOOK_FILE,
                 "language": "python",
                 "kernel_type": "notebook",
-                "is_private": True,
+                "is_private": False,  # public for review by the judges
                 "enable_gpu": False,
                 "enable_tpu": False,
                 "enable_internet": True,

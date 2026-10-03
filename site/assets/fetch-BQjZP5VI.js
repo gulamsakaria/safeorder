@@ -1,1 +1,0 @@
-import{allHandlers as e,t}from"./handlers-D8M_V1Mk.js";async function n(n){return await t(e,n)||Response.json({error:{code:`NOT_FOUND`,message:`not found`}},{status:404})}export{n as staticFetch};

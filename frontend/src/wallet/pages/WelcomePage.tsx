@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { RUNTIME_API, STATIC } from '../../api/client'
 import { useAction } from '../../api/hooks'
+import { useSameOriginBackend } from '../../api/sameOriginBackend'
 import { Button, Card, Label, TextInput } from '../../components/ui'
 import { useI18n } from '../../i18n/useI18n'
 import { useAuth } from '../AuthProvider'
@@ -14,6 +14,7 @@ export function WelcomePage() {
   const { t } = useI18n()
   const { me, signIn, signUp, accounts, switchTo } = useAuth()
   const navigate = useNavigate()
+  const backend = useSameOriginBackend()
   const [mode, setMode] = useState<Mode>('login')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -35,7 +36,7 @@ export function WelcomePage() {
     void submit.run()
   }
 
-  if (STATIC && !RUNTIME_API) {
+  if (backend === 'no') {
     return (
       <Card tone="warn">
         <p className="font-semibold">{t('w.nobackend')}</p>

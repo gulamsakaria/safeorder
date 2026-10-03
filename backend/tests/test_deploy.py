@@ -3,6 +3,7 @@
 import copy
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app import deploy
@@ -61,9 +62,10 @@ def test_without_the_switch_the_frontend_is_not_served(monkeypatch, dist) -> Non
     assert client.get("/").status_code == 404
 
 
-def test_a_missing_build_is_reported_clearly(monkeypatch, tmp_path) -> None:
+def test_a_missing_build_is_reported_clearly(tmp_path) -> None:
+    # (create_app first falls back to the ready-built site/ folder; see test_judge_package.py)
     with pytest.raises(FileNotFoundError):
-        make_client(monkeypatch, tmp_path / "nowhere")
+        deploy.install_frontend(FastAPI(), tmp_path / "nowhere")
 
 
 def test_demo_code_protects_the_sandbox_endpoints_only(monkeypatch, dist, engine) -> None:

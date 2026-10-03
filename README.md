@@ -8,6 +8,41 @@ Full specification: [BLUEPRINT.md](BLUEPRINT.md). Working rules: [WORKING_RULES.
 Decisions, measurements and caveats: [DECISIONS.md](DECISIONS.md). Runbook: [RUNBOOK.md](RUNBOOK.md).
 Model cards, dataset cards, evaluation protocol: [docs/](docs/README.md).
 
+## For judges: run it in one step
+
+Pick any one way. All of them use only synthetic data and demo money.
+
+**A. On your computer (recommended; needs Python 3.11 or newer and internet the first time).**
+Download or clone this repository, open a terminal in the folder and run:
+
+```bash
+python run_local.py          # Windows: py run_local.py, or double-click run_local.bat
+                             # macOS/Linux: ./run_local.sh also works
+```
+
+It creates its own `.venv`, installs the packages, generates the synthetic sellers, starts the
+server and opens `http://localhost:8000` in your browser. The first start takes a few minutes;
+after that it starts in seconds. Stop with Ctrl+C. Add `--reset` to start with a clean database.
+Demo admin (analyst console and the time controls under "More"): phone `01900000000`, PIN `12345`.
+
+**B. With Docker** (no Python needed): `docker build -t safeorder .` and then
+
+```bash
+docker run --rm -p 7860:7860 -e SAFEORDER_PERSIST=1 -e SAFEORDER_ADMIN_PHONE=01900000000 \
+  -e SAFEORDER_ADMIN_PIN=12345 -e SAFEORDER_PROTECT_ADMIN=1 safeorder
+```
+
+then open `http://localhost:7860`.
+
+**C. Hosted copy:** https://safeorder.stratifyxglobal.com (the website) calls an API on a free
+Render server. If nothing loads at once, wait one minute and reload: free servers sleep when idle.
+(If it is down, use A or B.)
+
+**What to try (3 minutes):** open the "Guide" tile, make a demo buyer and a demo seller, send money
+to the seller's payment number (you see the seller's name and Trust Check first), watch the money
+become "held", then confirm the delivery or report a problem and decide it as the admin.
+`site.zip` is only the website files for a web host; it cannot run alone because the wallet needs the server.
+
 ## What it does
 
 1. **Trust Check** before paying: a score, a band and plain Bangla/English reasons (LightGBM, calibrated).
@@ -35,10 +70,6 @@ make web-mock        # same UI with an in-browser mock server (no backend needed
 make demo-reset      # reset the database and load the seven demo scenarios
 make rehearse        # three clean demo runs from a reset
 ```
-
-A live demo needs no server: `make static-site` builds a static website (`site/`, `site.zip`) whose
-models run in the browser; upload it to any web host or a cPanel sub-domain (see RUNBOOK.md). A
-Hugging Face Space (API + UI in one container) is the alternative.
 
 ## Honest status
 

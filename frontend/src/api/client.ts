@@ -19,8 +19,9 @@ declare global {
 
 /** A backend chosen at run time in config.js (for example a Render service); '' means none. */
 export const RUNTIME_API: string = (globalThis.window?.SAFEORDER_API ?? '').trim().replace(/\/+$/, '')
-/** True when the in-browser models answer: a static build and no backend address in config.js. */
-export const IN_BROWSER = STATIC && RUNTIME_API === ''
+/** True when the in-browser models answer: a static build without the wallet and no backend address in config.js
+ * (the wallet always uses a server: the one in config.js, or the one that served the page). */
+export const IN_BROWSER = STATIC && !WALLET && RUNTIME_API === ''
 /** An empty VITE_API_BASE_URL means the API is served from the same address as the page. */
 export const API_BASE_URL: string = RUNTIME_API || (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000')
 export const DEMO_CODE_KEY = 'safeorder.demoCode'

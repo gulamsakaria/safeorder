@@ -246,7 +246,7 @@ by the trained dispute classifier while loading (without it they show "analysis 
 is a held order: a judge reports a problem on it in their own words, then runs the analysis in the
 analyst console.
 
-## Trained models on Kaggle (private)
+## Trained models on Kaggle (public for the judges)
 
 ```bash
 export KAGGLE_USERNAME=<you> KAGGLE_KEY=<token>      # or `kaggle auth login`
@@ -267,7 +267,7 @@ kaggle datasets version -p build/kaggle/dataset -m "update"   # first time: kagg
 kaggle kernels push -p kaggle/notebook    # runs the notebook on Kaggle (private)
 ```
 
-Both items are private by default. If the notebook fails right after a dataset update, it may
+Both items were made public for the judges (a new version keeps the visibility; a dataset created from scratch starts private and is switched with `kaggle datasets metadata --update` after setting `isPrivate` to false). If the notebook fails right after a dataset update, it may
 have started before the new dataset version was ready: push it again.
 
 ## Frontend notes

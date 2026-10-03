@@ -90,7 +90,12 @@ def create_app(
     if (
         env_flag("SAFEORDER_SERVE_FRONTEND") if serve_frontend is None else serve_frontend
     ):  # last: its catch-all route must not shadow the API
-        install_frontend(app, REPO_ROOT / config["web"]["dist_dir"])
+        dist = REPO_ROOT / config["web"]["dist_dir"]
+        if not (dist / "index.html").is_file():
+            # a downloaded copy of the repository has no build output (frontend/dist is not in
+            # git) but ships the ready-built website in site/, so it still opens in the browser
+            dist = REPO_ROOT / "site"
+        install_frontend(app, dist)
     return app
 
 
