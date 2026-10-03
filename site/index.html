@@ -9,6 +9,10 @@
   </head>
   <body>
     <div id="root"></div>
-    <script src="./config.js"></script>
+    <!-- config.js holds the address of the backend. It is loaded with a changing query string so a
+         host or CDN that caches script files for a year never serves an old copy of it. -->
+    <script>
+      document.write('<script src="./config.js?t=' + Date.now() + '"><\/script>')
+    </script>
   </body>
 </html>
