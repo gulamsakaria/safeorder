@@ -272,3 +272,142 @@ Known Windows quirks (the code is unchanged; these are limits of running it on W
 
 Tables are created with `create_all`, which does not migrate. Delete `data/safeorder.db` (it is not in
 Git) and run `make data` again.
+
+---
+
+## 6. Environment variables
+
+Variables are read from the process environment (`run_local.py` sets the right ones for a local run). `.env.example` lists `HF_TOKEN` and `SAFEORDER_CONFIG`
+as a template, but **no `.env` file is loaded automatically** (the code has no dotenv loader): export the
+variables in your shell or set them in the host's dashboard. Nothing is required to run the app locally.
+
+### Backend and deployment
+
+| Variable | Purpose | Default | Required |
+|---|---|---|---|
+| `SAFEORDER_CONFIG` | Path of the configuration file | `config/config.yaml` | no |
+| `DATABASE_URL` | Database link. `postgres://` or `postgresql://` is accepted; empty means SQLite in `data/safeorder.db` | empty (SQLite) | **yes for a deployment that must keep accounts** (the live site uses a Neon link) |
+| `SAFEORDER_PERSIST` | `1`: keep the database between restarts (accounts), load a small sample of synthetic sellers only when the database is empty, never wipe anything, switch `/api/demo/reset` off | off | yes for the live wallet |
+| `SAFEORDER_PROTECT_ADMIN` | `1`: the analyst console, `/api/sim` and `/api/demo` need an admin account | off | yes for the live wallet |
+| `SAFEORDER_ADMIN_PHONE`, `SAFEORDER_ADMIN_PIN` | Create or update the admin account on start (phone `01XXXXXXXXX`, 5-digit PIN). **Secrets: never published here.** | unset (no admin) | yes, to have an admin |
+| `SAFEORDER_FULL_DEMO` | With `SAFEORDER_PERSIST=1`: load all 3,000 synthetic sellers and the seven demo scenarios (about 15 minutes on a free host) | off | no |
+| `SAFEORDER_SERVE_FRONTEND` | `1`: the API also serves the built frontend (`frontend/dist`, or the committed `site/` when `frontend/dist` is not built) on the same address | off (the Dockerfile and `run_local.py` set `1`) | no |
+| `SAFEORDER_AUTOSEED` | `1`: on start, reset the SQLite database and load the seven demo scenarios. Refuses to touch a non-SQLite database. Ignored when `SAFEORDER_PERSIST=1` | off (the Dockerfile sets `1`) | no |
+| `SAFEORDER_AUTOSEED_BACKGROUND` | `1`: do the start-up work in a background thread so the port opens at once (Render needs this) | off | no |
+| `SAFEORDER_TRUST_PROXY` | `1`: take the client address from `X-Forwarded-For` (only behind a proxy) | off (the Dockerfile sets `1`) | no |
+| `SAFEORDER_RATE_LIMIT` | Requests per minute per client (0 switches the limit off) | `240` (from `config.yaml`) | no |
+| `SAFEORDER_CORS_ORIGINS` | Comma-separated browser origins allowed to call the API | `http://localhost:5173` | yes for a website on another address (the live API allows `https://safeorder.stratifyxglobal.com`) |
+| `SAFEORDER_DEMO_CODE` | A shared **secret** that protects `/api/demo` and `/api/sim` when `SAFEORDER_PROTECT_ADMIN` is off (header `X-Demo-Code`). **It is not published in this repository.** | unset (no code) | no |
+| `PORT` | Port of the container's server | `7860` | no (Render sets it) |
+| `RENDER` | Set by Render; the app uses it only to log a warning when it runs on a throw-away SQLite file | - | no |
+
+### Frontend build (Vite)
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `VITE_USE_MOCK` | `true`: an in-browser mock server answers (no backend needed). `false`: the real API | `true` in `frontend/.env.example` |
+| `VITE_API_BASE_URL` | Address of the API. Empty means the address the page was loaded from | `http://localhost:8000` |
+| `VITE_STATIC` | `true`: static website build (hash routes, backend address read from `config.js`) | unset |
+| `VITE_WALLET` | `true`: build the wallet app (home page, accounts, held payments). Unset builds the classic screens | unset (the Dockerfile and `npm run build:static` set `true`) |
+| `VITE_DEMO_BUYER_ID` | Buyer used for new orders in the classic screens | `B-000001` |
+
+### Scripts and tools
+
+| Variable | Purpose |
+|---|---|
+| `HF_TOKEN` | Hugging Face token for `scripts/deploy_space.py` and `scripts/upload_hf.py` (read from the environment, never printed or written). Use a placeholder such as `<your-token>`; never commit it. |
+| `KAGGLE_USERNAME`, `KAGGLE_KEY` | For the Kaggle CLI used by `make kaggle-models` and the explainer notebook (see RUNBOOK.md) |
+| `PYTHONPATH` | The Makefile sets `backend:.` so the scripts find the `app`, `scripts` and `eval` packages (on Windows: `backend;.`) |
+| `PYTHONUTF8` | Set to `1` on Windows (see section 5) |
+
+---
+
+## 7. Run and build commands
+
+| What | Command | Address |
+|---|---|---|
+| API (development, reload) | `make api` (runs `uvicorn app.main:app --reload --port 8000` in `backend/`) | <http://localhost:8000>, interactive docs at `/docs`, health at `/health` |
+| Frontend, classic screens, real API | `make web` (`VITE_USE_MOCK=false npm run dev`) | <http://localhost:5173> (run `make api` first) |
+| Frontend, classic screens, mock mode | `make web-mock` (no backend needed) | <http://localhost:5173> |
+| One command, everything | `python run_local.py` (Windows: `py run_local.py` or `run_local.bat`; Unix: `./run_local.sh`) | <http://localhost:8000> (the next free port if busy; `--port`, `--no-browser`, `--reset`) |
+| Container (API + built frontend) | `docker build -t safeorder .` then the `docker run` line under "For judges" | <http://localhost:7860> |
+
+On Windows, set the variable first instead of the Unix prefix (verified):
+
+```powershell
+# API (from the repository root; keep PYTHONUTF8 and PYTHONPATH from section 5 unset or set, both work here)
+cd backend
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
+
+# frontend, real API:   (second terminal)
+cd frontend; $env:VITE_USE_MOCK = "false"; npm run dev
+# frontend, mock mode (`npm run dev:mock` does not work in cmd/PowerShell because of its Unix syntax):
+cd frontend; $env:VITE_USE_MOCK = "true"; npx vite
+```
+
+### The wallet app on your own computer
+
+The classic screens above are the original demo. To run the **wallet app** (accounts, held payments, admin)
+locally, start the API with the wallet settings and the frontend with `VITE_WALLET=true`
+(verified on Windows with a separate SQLite file; register, sign in and the admin login all worked):
+
+```bash
+# terminal 1: API, with an admin account (choose your own PIN)
+SAFEORDER_PERSIST=1 SAFEORDER_PROTECT_ADMIN=1 SAFEORDER_ADMIN_PHONE=01900000000 \
+SAFEORDER_ADMIN_PIN=<5-digit-pin> make api
+
+# terminal 2
+cd frontend && VITE_WALLET=true VITE_USE_MOCK=false npm run dev     # http://localhost:5173
+```
+
+```powershell
+# Windows: terminal 1
+$env:SAFEORDER_PERSIST="1"; $env:SAFEORDER_PROTECT_ADMIN="1"; $env:SAFEORDER_ADMIN_PHONE="01900000000"; $env:SAFEORDER_ADMIN_PIN="<5-digit-pin>"
+cd backend; ..\.venv\Scripts\python.exe -m uvicorn app.main:app --port 8000
+# Windows: terminal 2
+cd frontend; $env:VITE_WALLET="true"; $env:VITE_USE_MOCK="false"; npm run dev
+```
+
+Open `http://localhost:5173/`, use the home page, then the **Guide** tile ("Create demo accounts").
+
+### Static website
+
+```bash
+make static-site     # make static-data; cd frontend && npm run build:static; python -m scripts.zip_site
+```
+
+This builds the **wallet** website into `site/` and packs `site/` into `site.zip` (about 1.3 MB).
+It needs a backend: set its address in `site/config.js` (section 8). To build the **classic in-browser**
+variant (the trained models run in the browser, no backend), run the same build without `VITE_WALLET`
+(verified: the seller search ran in the browser with no server):
+
+```bash
+cd frontend
+VITE_STATIC=true VITE_USE_MOCK=false VITE_API_BASE_URL= npm run build -- --outDir ../site-classic --emptyOutDir
+rm -f ../site-classic/mockServiceWorker.js
+```
+
+Windows PowerShell equivalent of `make static-site` (verified; the `npm run build:static` line itself uses
+Unix syntax and fails in cmd and PowerShell):
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.export_static          # ends with a PermissionError on Windows; the files are already written
+cd frontend
+$env:VITE_WALLET="true"; $env:VITE_STATIC="true"; $env:VITE_USE_MOCK="false"; $env:VITE_API_BASE_URL=""
+npx tsc -b; npx vite build --outDir ../site --emptyOutDir
+Remove-Item ../site/mockServiceWorker.js -ErrorAction SilentlyContinue
+cd ..; .\.venv\Scripts\python.exe -m scripts.zip_site
+```
+
+Serve `site/` with any web server (for example `python -m http.server` inside `site/`) or upload it to a
+host (RUNBOOK.md has the cPanel steps). The site uses hash routes, so no rewrite rules are needed.
+
+### Hugging Face Space (optional)
+
+`HF_TOKEN=<your-token> python -m scripts.deploy_space --repo-id <your-user>/safeorder` uploads one
+container (API and UI). `--dry-run` stages and scans the files without uploading (verified: "231 files
+(6.1 MB) staged and scanned clean").
+
+### Ports at a glance
+
+`8000` API in development, `5173` Vite dev server, `7860` container (or `$PORT`).
