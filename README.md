@@ -530,3 +530,227 @@ take up to a minute, section 8) **or** your own copy with `python run_local.py`
 The seven classic demo scenarios (section 2) are loaded by `python run_local.py` (it sets
 `SAFEORDER_FULL_DEMO=1`, so the analyst console already holds their disputes) or by `make demo-reset`; the
 classic controls are at `/demo`.
+
+---
+
+## 10. Other configuration
+
+### `config/config.yaml`
+
+Every threshold and path lives here, not in the code. Starting values for the demo; none of them is a
+claim about any company's policy.
+
+| Setting | Value | Meaning |
+|---|---|---|
+| `rules.hold_period_hours` | 72 | Hold after delivery (classic orders) |
+| `rules.seller_response_deadline_hours` | 48 | Time the seller has to answer a dispute |
+| `rules.dispatch_deadline_hours` | 72 | A classic order the seller never dispatches becomes disputable |
+| `rules.seller_claim_deadline_hours` | 24 | Wallet payment: the seller must enter the order number, or the money goes back |
+| `rules.buyer_silence_hours` | 72 | Wallet payment: a clean seller proof releases the money after this silence |
+| `rules.trust.trusted_min`, `caution_min` | 70, 40 | Score bands: TRUSTED 70-100, CAUTION 40-69, HIGH_RISK 0-39 |
+| `rules.trust.limited_history_max_age_days`, `..._min_orders` | 14, 10 | A younger or thinner account gets LIMITED_HISTORY instead of a low score |
+| `rules.trust.limited_history_override_max_score` | 20 | ...unless the model score is at or below this (strong evidence of risk) |
+| `rules.routing.min_class_probability` | 0.80 | Below this a case goes to a human |
+| `rules.routing.high_amount_bdt` | 5000 | At or above this a case always goes to a human |
+| `rules.routing.repeat_claimant_count` / `_window_days` | 3 / 90 | The repeat-claimant flag |
+| `api.max_amount_bdt` | 200000 | Largest payment |
+| `api.max_body_bytes` | 65536 | Larger request bodies get 413 (the proof upload has its own 600,000 byte limit) |
+| `api.rate_limit_per_minute` | 240 | Per client address; 0 switches it off |
+| `wallet.signup_bonus_bdt` | 2000 | Demo money of a new account |
+| `wallet.add_money_max_bdt`, `add_money_total_cap_bdt` | 5000, 20000 | Limits of "Add Money" per request and per account |
+| `wallet.max_pin_attempts`, `lock_minutes` | 5, 15 | PIN lockout |
+| `wallet.sample_sellers_per_archetype` | 12 | A new persistent database gets 72 synthetic sellers (12 of each of 6 kinds) |
+| `paths.database` | `data/safeorder.db` | The SQLite file (not in Git) |
+
+### `config.js` (the website's backend address)
+
+`site/config.js` holds one line, `window.SAFEORDER_API = ''`. Empty means "no backend" (in-browser mode
+for a classic build; the wallet build then shows "the server is not set up"). Set it to the API address,
+without a trailing slash, on the host and reload; no rebuild is needed.
+
+### The hidden `/demo` route and the demo code
+
+The classic screens include a sandbox control page at `/demo` (`/#/demo` on the static site): courier
+events, moving the simulated clock, resetting the data and loading the seven scenarios. It is not in the
+menu. When the API is started with `SAFEORDER_DEMO_CODE`, the `/api/demo` and `/api/sim` calls need that
+code in the `X-Demo-Code` header (the page has a field for it). **The demo code is a secret and is not
+published in this repository.** On a persistent, admin-protected server (the live site) the reset is
+switched off and `/api/sim` needs an admin sign-in instead; the admin panel's **Time** tab replaces the
+clock controls.
+
+### Data location and access
+
+- SQLite file: `data/safeorder.db`, created by `make data`; generated data in `data/synthetic/v1/`;
+  dispute cases in `raw/` (source) and `data/cases/` (the split).
+- The live site's data is in Neon (PostgreSQL), reachable only through the API.
+- Anyone can open an account on the live site; each person sees only their own orders. The admin
+  account and the Neon, Render and host credentials are private to the owner.
+
+---
+
+## 11. Evaluation results and limits
+
+Every number below is read from [`reports/summary.json`](reports/summary.json) (written by `make eval`
+from the trained models and the held-out test data) and rounded. The same numbers are on the live
+site's metrics page.
+
+> **All data is synthetic.** The seller data comes from our own generator and the dispute cases were
+> **written by an AI assistant and have not been reviewed by a person**. These results show that the
+> pipeline works and how it behaves on data we made ourselves. They say nothing about how it would
+> perform on real sellers or real disputes.
+
+### Trust model (synthetic test set "v2": 3,000 sellers made by a shifted generator, never used in training)
+
+| Measure | Trust model | Account-age-only baseline |
+|---|---|---|
+| PR-AUC (label with about 4% noise) | **0.898** | 0.585 |
+| ROC-AUC (noisy label) | **0.929** | 0.803 |
+| Share of risky sellers caught at about a 5% false-alarm target (noisy label) | **87.9%** (actual false-alarm rate 3.4%) | 35.3% |
+| Calibration error (ECE) / Brier score | 0.030 / 0.044 | - |
+| PR-AUC on the clean label (easy, shown for completeness) | 0.9965 | 0.613 |
+| Time per score (p95; budget 50 ms) | 0.54 ms | - |
+
+**Fairness for new honest sellers** (same test data, three policies): the policy in use
+(`override_default`) catches **97.7%** of high-risk sellers with a precision of **98.7%** in the
+HIGH_RISK band, flags **1.0%** of honest new sellers as risky, and puts **38.8%** of honest new sellers
+in the neutral LIMITED_HISTORY band instead of a low score. The literal blueprint rule (no override)
+caught only 54.3% of high-risk sellers and 0% of the fast "fake burst" sellers, which is why the override
+exists.
+
+### Dispute classifier (TF-IDF + logistic regression, four classes)
+
+Trained on 383 cases, calibrated on 89. "Wrong refund" = a true false claim for which a refund would be
+suggested; "wrong rejection" = a true seller-fault or courier case for which a rejection would be suggested.
+
+| Split | Cases | Accuracy | Macro-F1 | Calibration error | Wrong refunds | Wrong rejections |
+|---|---|---|---|---|---|---|
+| Test 1 (batch `ai_b`) | 310 | 77.7% | 0.779 | 0.090 | 5.3% (4) | 3.8% (6) |
+| Test 2 (batch `ai_c`) | 244 | 70.1% | 0.696 | 0.062 | 8.5% (5) | 11.1% (14) |
+| Validation (also used to calibrate: **not an honest test**) | 89 | 77.5% | 0.777 | 0.103 | 13.0% (3) | 13.0% (6) |
+
+All splits were written by the same author. Test 1 holds 132 distinct stories and Test 2 only 28, so Test 2 is a weak test. Prediction time p95
+5.3 ms (budget 100 ms).
+
+### Routing through the whole analyzer
+
+| Test split | Fast lane (one-click confirmation) | Accuracy inside the fast lane | Wrong refunds in the fast lane | Sent to a human |
+|---|---|---|---|---|
+| Test 1 | 17.4% of cases | 96.3% | 0 | 82.6% |
+| Test 2 | 14.8% of cases | 86.1% | 0 | 85.2% |
+
+### Injection screen: a first filter, not a guarantee
+
+- On 22 injection phrases and 9 harmless phrases written by the developers, the screen found **22 of
+  22** with **0 of 9** false alarms. **That is not an independent result**: its patterns were written
+  while looking at those phrases.
+- On 12 phrases written afterwards and never used to change the screen it found **1 of 12 (8.3%)**.
+- On 24 AI-written cases with an injected sentence, the screen itself caught 8 (33%); 20 of 24 were
+  still forced to human review through other flags, 16 got past the screen, and for 4 the suggested
+  outcome changed compared with the same case without the sentence.
+- The real protection is structural: no free text can change a label, a route or a ledger entry, and no
+  generative model is in the decision path. A held-out injection test set is **not measured**.
+
+### Not measured
+
+The analyst time study (`time_study`) is `not_measured`: no timed analyst sessions exist yet.
+
+### Honest status
+
+- All data is synthetic. **The dispute cases were written by an AI assistant, not by ChatGPT,
+  Gemini or the team, and no person has reviewed them** (`raw/PROVENANCE.md`). The classifier's
+  scores therefore show that the pipeline works, not how it would do on real disputes.
+- Not done: the optional transformer classifier (Step 13), the team's own test cases, the 10%
+  manual case review, the analyst time study, native-speaker review of the Bangla text, a real wallet,
+  SMS one-time codes and courier integration, and field interviews (a draft consent note exists in
+  `docs/drafts/`; no interview results are in this repository).
+- The repository has no licence file yet, so all rights are reserved by default (`docs/licence_register.md`
+  lists the open licence and terms-of-use questions).
+
+---
+
+## 12. Pre-existing components and disclosures
+
+**Libraries (all open source, installed from PyPI and npm):** the Python and JavaScript packages listed in
+section 3, with their licences read from the installed metadata in
+[`docs/licence_register.md`](docs/licence_register.md) (MIT, BSD, Apache-2.0 and similar).
+three.js draws the 3D background of the app; the browser loads the **Noto Sans Bengali** font from Google
+Fonts (its licence is marked "to confirm" in the register).
+
+**Pre-trained or third-party models:** none. Both models are trained from scratch in this repository
+(`scripts/train_trust.py`, `scripts/train_dispute.py`) on data made here.
+
+**Datasets:** no third-party dataset is used (`data/public/` is empty). The seller data is generated by
+`scripts/generate_sellers.py` from fixed seeds in `config/config.yaml`; the dispute cases in `raw/`
+were written by an AI assistant (provenance in [`raw/PROVENANCE.md`](raw/PROVENANCE.md)). Nothing in
+the data is real.
+
+**External services:** Render (API), Neon (database), a cPanel host (website), optionally Hugging Face
+and Kaggle. No external API is called in any decision path.
+
+**Kaggle copies of the models:** the explainer notebook
+<https://www.kaggle.com/code/bmr07sakaria/safeorder-trust-model-explainer> and the dataset
+<https://www.kaggle.com/datasets/bmr07sakaria/safeorder-trust-bundle> (the trained models and the
+evaluation reports; no raw cases or synthetic data). RUNBOOK.md records that both were made public for
+the judges.
+
+### Use of AI tools
+
+An AI coding assistant (Claude, by Anthropic) was used while building this project: it helped write
+parts of the code, the tests and the documents, and it wrote the synthetic dispute cases (see
+`raw/PROVENANCE.md`). This is a disclosure of a tool, not an author: the project and its content
+belong to its owner, who is responsible for them. Not everything the assistant wrote has been
+reviewed by a person yet (see "Honest status" above).
+
+AI is kept out of every decision about money. The machine-learning models and the evidence analyzer
+only **suggest**; rules in `rules.py` and `config/config.yaml` decide, and a human admin decides every
+dispute. Evidence text is treated as untrusted data and is never followed as an instruction. All data
+is synthetic or entered by testers in a sandbox with demo money, and no real personal data is used.
+
+### Development history
+
+The full history is in the Git log (`git log --reverse`); every commit is dated between **1 October
+and 3 October 2026**. The problem was published on Thursday, 1 October 2026 at 9:01 AM and the
+submission deadline is 4 October 2026 at 10:00 AM; the work in this repository was done in that window.
+
+---
+
+## 13. Repository layout and documentation index
+
+```
+backend/app/        FastAPI app: api/ (routes), trust/ (model, features, reasons), disputes/ (classifier,
+                    injection screen), analyzer/ (timeline, checks, router, explanations), rules.py,
+                    state_machine.py, ledger.py, wallet.py, payments.py, proof.py, auth.py, accounts.py
+backend/tests/      pytest tests (513 in a fresh clone)
+frontend/           React + TypeScript app: src/wallet/ (wallet app and home page), src/pages/ (classic
+                    screens), src/engine/ (the models ported to TypeScript for in-browser mode), src/test/
+config/config.yaml  every threshold and path
+data/               generated data (synthetic, not committed), data/cases/ (dispute case split)
+raw/                the dispute case files and PROVENANCE.md
+models/             the trained models (committed)
+reports/            evaluation output: summary.json and figures
+eval/               evaluation code        scripts/   data generation, training, build and deploy scripts
+docs/               model cards, dataset cards, protocol, responsible-AI note, pitch material
+deploy/space/       the Hugging Face Space card        kaggle/notebook/   the Kaggle explainer notebook
+site/, site.zip     the built static website           Dockerfile, render.yaml   container and Render blueprint
+run_local.py        one-command local run (also run_local.sh, run_local.bat)
+```
+
+| Document | File |
+|---|---|
+| Full specification and build plan | [BLUEPRINT.md](BLUEPRINT.md) |
+| Working rules for the AI assistant | [WORKING_RULES.md](WORKING_RULES.md) |
+| Decisions, measurements and caveats | [DECISIONS.md](DECISIONS.md) |
+| Operating notes (deploy, cPanel, Render, Hugging Face, Kaggle) | [RUNBOOK.md](RUNBOOK.md) |
+| Documentation index | [docs/README.md](docs/README.md) |
+| Model card, trust model | [docs/model_card_trust.md](docs/model_card_trust.md) |
+| Model card, dispute classifier | [docs/model_card_dispute_classifier.md](docs/model_card_dispute_classifier.md) |
+| Dataset card, synthetic sellers | [docs/dataset_card_synthetic_sellers.md](docs/dataset_card_synthetic_sellers.md) |
+| Dataset card, dispute cases | [docs/dataset_card_dispute_cases.md](docs/dataset_card_dispute_cases.md) |
+| Synthetic data assumptions | [docs/synthetic_assumptions.md](docs/synthetic_assumptions.md) |
+| Evaluation protocol | [docs/evaluation_protocol.md](docs/evaluation_protocol.md) |
+| Responsible AI note | [docs/responsible_ai.md](docs/responsible_ai.md) |
+| Licence register | [docs/licence_register.md](docs/licence_register.md) |
+| API contract | [docs/openapi.json](docs/openapi.json) |
+| Pitch outline, demo script, judge questions | [docs/pitch/](docs/pitch/) |
+| Human-document drafts (team agreement, logic chain, consent note, terms, regulatory note) | [docs/drafts/](docs/drafts/) |
+| Case provenance | [raw/PROVENANCE.md](raw/PROVENANCE.md) |
