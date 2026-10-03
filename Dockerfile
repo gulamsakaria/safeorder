@@ -7,6 +7,9 @@ WORKDIR /web
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
+# The frontend imports the translation JSON files from ../../../backend/app/i18n (see src/engine/*.ts).
+# From WORKDIR /web that path resolves to /backend/app/i18n, so copy the folder there before the build.
+COPY backend/app/i18n /backend/app/i18n
 # Empty API address: the page calls the API on the same address it was loaded from.
 ENV VITE_USE_MOCK=false VITE_API_BASE_URL=
 RUN npm run build
