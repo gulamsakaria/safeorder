@@ -35,6 +35,16 @@ def dispatch_deadline(placed_at: datetime, cfg: Config | None = None) -> datetim
     return placed_at + timedelta(hours=_rules(cfg)["dispatch_deadline_hours"])
 
 
+def claim_deadline(placed_at: datetime, cfg: Config | None = None) -> datetime:
+    """Latest time the seller may enter the order number of a wallet payment."""
+    return placed_at + timedelta(hours=_rules(cfg)["seller_claim_deadline_hours"])
+
+
+def silence_deadline(proof_at: datetime, cfg: Config | None = None) -> datetime:
+    """When a clean seller proof may release the money if the buyer stayed silent."""
+    return proof_at + timedelta(hours=_rules(cfg)["buyer_silence_hours"])
+
+
 def seller_response_deadline(opened_at: datetime, cfg: Config | None = None) -> datetime:
     return opened_at + timedelta(hours=_rules(cfg)["seller_response_deadline_hours"])
 

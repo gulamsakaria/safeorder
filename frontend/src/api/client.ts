@@ -1,4 +1,5 @@
 import createClient from 'openapi-fetch'
+import { getToken } from '../wallet/session'
 import type { components, paths } from './schema'
 
 export type Schemas = components['schemas']
@@ -7,6 +8,8 @@ export type Schemas = components['schemas']
 export const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 /** VITE_STATIC=true: no backend at all; the real models run in the browser (src/static). */
 export const STATIC = import.meta.env.VITE_STATIC === 'true'
+/** VITE_WALLET=true: the sandbox wallet app (accounts, held payments); it always needs a backend. */
+export const WALLET = import.meta.env.VITE_WALLET === 'true'
 
 declare global {
   interface Window {
@@ -34,6 +37,8 @@ export const api = createClient<paths>({
 // The sandbox controls may be protected by a demo code (set on the server); send it when present.
 api.use({
   onRequest({ request }) {
+    const token = getToken()
+    if (token) request.headers.set('Authorization', `Bearer ${token}`)
     const path = new URL(request.url).pathname
     if (path.startsWith('/api/demo') || path.startsWith('/api/sim')) {
       try {

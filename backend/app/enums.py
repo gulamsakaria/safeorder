@@ -78,6 +78,10 @@ class OrderEvent(StrEnum):
     ANALYST_REQUEST_EVIDENCE = "ANALYST_REQUEST_EVIDENCE"
     ANALYST_ESCALATE = "ANALYST_ESCALATE"
     APPEAL = "APPEAL"
+    BUYER_ACCEPTED = "BUYER_ACCEPTED"  # the buyer says "I received it": the seller is paid
+    PROOF_RELEASE = "PROOF_RELEASE"  # seller delivery proof accepted (by an admin, or the timer)
+    ADMIN_REFUND = "ADMIN_REFUND"  # an admin sends the held money back to the buyer
+    SELLER_NO_CLAIM = "SELLER_NO_CLAIM"  # the seller never entered the order number in time
 
 
 class DisputeClass(StrEnum):
@@ -115,3 +119,21 @@ class FlagCode(StrEnum):
     AMOUNT_MISMATCH = "AMOUNT_MISMATCH"
     LATE_REPORT = "LATE_REPORT"
     INJECTION_DETECTED = "INJECTION_DETECTED"
+
+
+class UserRole(StrEnum):
+    USER = "USER"
+    ADMIN = "ADMIN"
+
+
+class WalletTxKind(StrEnum):
+    SIGNUP_BONUS = "SIGNUP_BONUS"
+    ADD_MONEY = "ADD_MONEY"
+    SEND_MONEY_OUT = "SEND_MONEY_OUT"
+    SEND_MONEY_IN = "SEND_MONEY_IN"
+    PAYMENT_HELD = "PAYMENT_HELD"  # buyer: money left the wallet and is held for the order
+    PAYMENT_RECEIVED_HELD = "PAYMENT_RECEIVED_HELD"  # seller: money arrived, held
+    RELEASED = "RELEASED"  # seller: held money moved to the main wallet
+    REFUNDED = "REFUNDED"  # buyer: held money came back
+    REFUND_OUT = "REFUND_OUT"  # seller: held money went back to the buyer
+    ADMIN_GRANT = "ADMIN_GRANT"

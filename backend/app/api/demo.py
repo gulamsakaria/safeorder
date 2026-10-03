@@ -25,6 +25,9 @@ def reset(
 
     The ``demo`` set also creates the seven demo scenarios (BLUEPRINT.md Section 12.2).
     """
+    if cfg["api"].get("persist", False):
+        # a persistent database holds real accounts: it is never wiped from the website
+        raise ApiError(404, "NOT_FOUND", "not found")
     if body.scenario_set not in SCENARIO_SETS:
         raise ApiError(422, "VALIDATION_ERROR", f"scenario_set must be one of {SCENARIO_SETS}")
     loaded = reset_and_load(engine, body.scenario_set, cfg)

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useBackendStatus } from '../api/backendStatus'
+import { WALLET } from '../api/client'
 import { useI18n } from '../i18n/useI18n'
 import { Scene3D } from './Scene3D'
 
@@ -58,7 +59,7 @@ export function Layout() {
           {t('banner.text')}
         </div>
         <header className={`so-rise mx-auto flex ${width} items-start justify-between gap-3 px-4 pb-2 pt-5`}>
-          <Link to="/" className="block">
+          <Link to={WALLET ? '/home' : '/'} className="block">
             <h1 className="so-title text-3xl font-bold">{t('app.title')}</h1>
             <p className="text-sm text-indigo-200">{t('app.tagline')}</p>
           </Link>
@@ -71,7 +72,7 @@ export function Layout() {
           </button>
         </header>
         <nav className={`so-rise mx-auto flex ${width} flex-wrap gap-1 px-4 pb-3`} aria-label="main">
-          <NavLink to="/" end className={link}>
+          <NavLink to={WALLET ? '/check' : '/'} end className={link}>
             {t('nav.check')}
           </NavLink>
           <NavLink to="/analyst" className={link}>
@@ -80,9 +81,16 @@ export function Layout() {
           <NavLink to="/metrics" className={link}>
             {t('nav.metrics')}
           </NavLink>
-          <NavLink to="/demo" className={link}>
-            {t('nav.demo')}
-          </NavLink>
+          {!WALLET && (
+            <NavLink to="/demo" className={link}>
+              {t('nav.demo')}
+            </NavLink>
+          )}
+          {WALLET && (
+            <NavLink to="/home" className={link}>
+              {t('w.nav.home')}
+            </NavLink>
+          )}
         </nav>
         <main className={`so-stagger mx-auto ${width} space-y-4 px-4 pb-16`}>
           {backend !== 'ready' && (

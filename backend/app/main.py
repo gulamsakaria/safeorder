@@ -8,11 +8,12 @@ use, and the dispute classifier is loaded from the trained model (see Step 6).
 import os
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Engine
 
-from app.api import analyst, demo, disputes, metrics, orders, sim, trust
+from app.api import accounts, admin, analyst, demo, disputes, metrics, orders, sim, trust
+from app.api.deps import require_admin_if_protected
 from app.api.errors import install_error_handlers
 from app.config import load_config
 from app.deploy import REPO_ROOT, apply_env, env_flag, install_frontend, lifespan
@@ -54,15 +55,22 @@ def create_app(
         allow_headers=["*"],
     )
     install_error_handlers(app)
-    install_security(app, config["api"])
+    install_security(app, config["api"], config["wallet"]["upload_max_body_bytes"])
 
     @app.get("/health", tags=["health"])
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
     prefix = config["api"]["base_path"]
-    for module in (trust, orders, sim, disputes, analyst, metrics, demo):
+    for module in (trust, orders, sim, disputes, metrics, demo, accounts, admin):
         app.include_router(module.router, prefix=prefix, responses=ERROR_RESPONSES)
+    # the analyst console is for admins once accounts are on (api.protect_admin)
+    app.include_router(
+        analyst.router,
+        prefix=prefix,
+        responses=ERROR_RESPONSES,
+        dependencies=[Depends(require_admin_if_protected)],
+    )
     if (
         env_flag("SAFEORDER_SERVE_FRONTEND") if serve_frontend is None else serve_frontend
     ):  # last: its catch-all route must not shadow the API

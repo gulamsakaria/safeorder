@@ -3,17 +3,18 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
-from app import rules
+from app import payments, rules
 from app import state_machine as sm
 from app.analyzer.pipeline import analyze
 from app.api import common
 from app.api.deps import get_classifier, get_config, get_session
 from app.api.errors import ApiError
+from app.auth import optional_user
 from app.clock import clock
 from app.db import next_id, write_audit
 from app.disputes.classifier import DisputeClassifier
 from app.enums import DisputeStatus, EvidenceKind, OrderEvent, Party
-from app.models import Dispute, EvidenceItem, Order
+from app.models import Dispute, EvidenceItem, Order, User
 from app.schemas import (
     AnalysisOut,
     BuyerEvidenceRequest,
@@ -48,13 +49,19 @@ def _add_evidence(session: Session, dispute_id: str, party: Party, text: str) ->
 
 
 @router.get("/disputes/{dispute_id}", response_model=DisputeOut)
-def get_dispute(dispute_id: str, session: Session = Depends(get_session)) -> dict[str, Any]:
+def get_dispute(
+    dispute_id: str,
+    session: Session = Depends(get_session),
+    user: User | None = Depends(optional_user),
+) -> dict[str, Any]:
     """The dispute as both parties see it: claim, evidence, deadline and status.
 
     An addition to the contract. It carries no analysis and no analyst notes; the seller screen
     needs it to show the claim and the response deadline.
     """
-    return common.dispute_out(session, _get_dispute(session, dispute_id))
+    dispute = _get_dispute(session, dispute_id)
+    payments.guard_order(session.get(Order, dispute.order_id), user, ("BUYER", "SELLER"))
+    return common.dispute_out(session, dispute)
 
 
 @router.post("/disputes", response_model=DisputeOut, status_code=201)
@@ -62,11 +69,13 @@ def create_dispute(
     body: CreateDisputeRequest,
     session: Session = Depends(get_session),
     cfg: dict[str, Any] = Depends(get_config),
+    user: User | None = Depends(optional_user),
 ) -> dict[str, Any]:
     """The buyer reports a problem. The held money stays in HOLD until an analyst decides."""
     order = session.get(Order, body.order_id)
     if order is None:
         raise LookupError(f"order {body.order_id} not found")
+    payments.guard_order(order, user, ("BUYER",), admin_ok=False)
     now = clock.now()
     dispute_id = next_id(session, Dispute, "D")
     sm.apply_event(
@@ -93,11 +102,19 @@ def create_dispute(
 
 @router.post("/disputes/{dispute_id}/seller-response", response_model=DisputeOut)
 def seller_response(
-    dispute_id: str, body: SellerResponseRequest, session: Session = Depends(get_session)
+    dispute_id: str,
+    body: SellerResponseRequest,
+    session: Session = Depends(get_session),
+    user: User | None = Depends(optional_user),
 ) -> dict[str, Any]:
     dispute = _get_dispute(session, dispute_id)
+    payments.guard_order(session.get(Order, dispute.order_id), user, ("SELLER",), admin_ok=False)
     now = clock.now()
-    if dispute.status not in (DisputeStatus.OPEN, DisputeStatus.SELLER_RESPONDED):
+    if dispute.status not in (
+        DisputeStatus.OPEN,
+        DisputeStatus.SELLER_RESPONDED,
+        DisputeStatus.ANALYZED,  # a report is analysed at once; the seller may still answer
+    ):
         raise ApiError(
             409, "ILLEGAL_STATE", f"the seller cannot respond in status {dispute.status}"
         )
@@ -115,7 +132,10 @@ def seller_response(
 
 @router.post("/disputes/{dispute_id}/buyer-evidence", response_model=DisputeOut)
 def buyer_evidence(
-    dispute_id: str, body: BuyerEvidenceRequest, session: Session = Depends(get_session)
+    dispute_id: str,
+    body: BuyerEvidenceRequest,
+    session: Session = Depends(get_session),
+    user: User | None = Depends(optional_user),
 ) -> dict[str, Any]:
     """Extra evidence from the buyer, for example after an analyst asked for more.
 
@@ -123,6 +143,7 @@ def buyer_evidence(
     buyer no way to answer.
     """
     dispute = _get_dispute(session, dispute_id)
+    payments.guard_order(session.get(Order, dispute.order_id), user, ("BUYER",), admin_ok=False)
     if dispute.status not in OPEN_FOR_EVIDENCE:
         raise ApiError(409, "ILLEGAL_STATE", f"evidence cannot be added in status {dispute.status}")
     _add_evidence(session, dispute_id, Party.BUYER, body.evidence_text)
@@ -137,9 +158,11 @@ def analyze_dispute(
     session: Session = Depends(get_session),
     classifier: DisputeClassifier = Depends(get_classifier),
     cfg: dict[str, Any] = Depends(get_config),
+    user: User | None = Depends(optional_user),
 ) -> dict[str, Any]:
     """Run the evidence analyzer. It only suggests; it never moves money."""
     dispute = _get_dispute(session, dispute_id)
+    payments.guard_order(session.get(Order, dispute.order_id), user, ("BUYER", "SELLER"))
     if dispute.status == DisputeStatus.RESOLVED:
         raise ApiError(409, "ILLEGAL_STATE", "this dispute is already resolved")
     result = analyze(session, dispute_id, classifier, cfg)

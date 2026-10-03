@@ -110,6 +110,45 @@ if you want the live site to show the real API (database, ledger, audit log).
 Check: browser F12 -> Network shows requests to the Render address; a red CORS error means the
 `SAFEORDER_CORS_ORIGINS` value on Render does not equal the website's address exactly (https, no slash).
 
+## Accounts, wallet and the live website (Neon + Render + the sub-domain)
+
+The website is a sandbox wallet: people open an account with a phone number and a PIN, get demo
+money, pay sellers (the money is held), sellers enter the order number, buyers confirm delivery,
+problems go to the AI analysis and an admin. Everything is demo money. Seller trust checks, held
+payments, delivery proof, the 24-hour and 72-hour timers and the admin area are in
+`backend/app/{accounts,auth,wallet,payments,proof}.py` and `backend/app/api/{accounts,admin}.py`.
+
+How the pieces fit: the website (static files on the sub-domain) calls the API on Render; the API
+keeps its data in a Postgres database that survives restarts.
+
+1. **Database (once).** neon.tech -> create a project -> copy the connection string
+   (`postgresql://user:password@host/dbname?sslmode=require`). Keep it private.
+2. **Render.** New + -> Blueprint -> this repository. Fill the three secrets Render asks for:
+   `DATABASE_URL` (the Neon link), `SAFEORDER_ADMIN_PHONE` (for example `01900000000`) and
+   `SAFEORDER_ADMIN_PIN` (5 digits). Press Apply. The first start loads the 3,000 synthetic sellers
+   and the demo scenarios into the empty database (about a minute); registration answers
+   "starting" until it is done. Later starts keep everything.
+3. **Check.** `<render address>/health` shows `{"status":"ok"}`. Sign in on the website with the admin
+   number and PIN: the admin panel is under "More".
+4. **Website.** Upload `site.zip` to the sub-domain folder (see the cPanel section above) and set
+   `window.SAFEORDER_API = 'https://<your-service>.onrender.com'` in `config.js`.
+5. **Role-play.** Open the "Guide" tile: one click makes a demo buyer and a demo seller. Use two
+   tabs (or "More" -> switch account). The admin moves time forward (24 or 72 hours) under
+   "Time" to show the timers.
+
+Rules in short: paying a seller account always holds the money; the seller must enter the order
+number within 24 hours or the money goes back; the buyer presses "I received it" to pay the seller;
+a seller proof (tracking number and photo) releases the money by itself only after 72 hours of buyer
+silence and only when the checks find nothing (a repeated photo or tracking number, a bad number,
+a high-risk seller), otherwise an admin decides. A problem report freezes the money until an admin
+decides in the analyst console. PINs are stored as salted hashes, five wrong PINs lock the account
+for 15 minutes, and the website tells people never to use a real PIN.
+
+Locally: `SAFEORDER_PERSIST=1 SAFEORDER_PROTECT_ADMIN=1 SAFEORDER_ADMIN_PHONE=... SAFEORDER_ADMIN_PIN=...
+make api` (SQLite in `data/safeorder.db`, which is not in git). Delete that file after a model change:
+tables are created with `create_all`, which does not migrate. The static site is built with
+`VITE_WALLET=true` (that is what `npm run build:static` does).
+
 ## Look and feel (3D background and motion)
 
 The interface has a dark animated 3D background (three.js, `frontend/src/components/Scene3D.tsx`),

@@ -10,6 +10,11 @@ Environment variables (all optional):
   SAFEORDER_TRUST_PROXY=1      take the client address from X-Forwarded-For (only behind a proxy)
   SAFEORDER_RATE_LIMIT=N       requests per minute per client (0 = off)
   SAFEORDER_CORS_ORIGINS=a,b   allowed browser origins
+  SAFEORDER_PERSIST=1          keep the database between restarts (set DATABASE_URL for Postgres):
+                               real accounts, nothing is wiped; demo data is loaded only when empty
+  SAFEORDER_PROTECT_ADMIN=1    the analyst console and /api/sim, /api/demo need an admin account
+  SAFEORDER_ADMIN_PHONE, SAFEORDER_ADMIN_PIN   create or update the admin account on start
+  DATABASE_URL                 a Postgres link, for example from Neon (otherwise SQLite is used)
 """
 
 import copy
@@ -46,6 +51,10 @@ def apply_env(config: dict[str, Any]) -> dict[str, Any]:
         api["cors_origins"] = [o.strip() for o in os.environ["SAFEORDER_CORS_ORIGINS"].split(",")]
     if env_flag("SAFEORDER_TRUST_PROXY"):
         api["trust_proxy_headers"] = True
+    if env_flag("SAFEORDER_PROTECT_ADMIN"):
+        api["protect_admin"] = True
+    if env_flag("SAFEORDER_PERSIST"):
+        api["persist"] = True
     return cfg
 
 
@@ -90,9 +99,69 @@ def seed_demo(app: FastAPI) -> None:
         logger.exception("demo seeding failed")
 
 
+def start_persistent(app: FastAPI) -> None:
+    """Start on a database that keeps its data: create tables, load the synthetic sellers and the
+    demo scenarios only when the database is empty, and create the admin. Never wipes anything.
+
+    The synthetic data goes in first, because it owns the ids B-000001... and S-0001...; new
+    accounts continue after them. Registration answers 503 until this has finished."""
+    from sqlmodel import Session, func, select
+
+    from app.auth import ensure_admin_account
+    from app.demo_scenarios import load_demo_scenarios
+    from app.models import Order, Seller
+    from app.seed import SyntheticDataMissing, load_from_files
+    from app.trust.model import TrustModel
+
+    logging.basicConfig(level=logging.INFO)
+    cfg = app.state.cfg
+    app.state.starting = True
+    try:
+        engine = app.state.engine
+        if engine is None:
+            engine = app.state.engine = make_engine()
+        create_db(engine)
+        with Session(engine) as session:
+            empty = session.exec(select(func.count()).select_from(Seller)).one() == 0
+        if empty:
+            try:
+                loaded = load_from_files(engine, cfg)
+                logger.info("synthetic sellers loaded: %s", loaded)
+                version = cfg["trust_model"]["version"]
+                path = REPO_ROOT / cfg["paths"]["models_dir"] / f"{version}.joblib"
+                model = app.state.trust_model or TrustModel.load(path)
+                app.state.trust_model = model
+                with Session(engine) as session:
+                    has_orders = session.exec(select(func.count()).select_from(Order)).one() > 0
+                if not has_orders:
+                    scenarios = load_demo_scenarios(engine, model, app.state.classifier, cfg)
+                    logger.info("demo scenarios loaded: %d", len(scenarios))
+            except SyntheticDataMissing:
+                logger.exception("synthetic data missing")
+            except Exception:  # the demo stories are optional; accounts must still work
+                logger.exception("demo scenarios could not be loaded")
+        phone = os.environ.get("SAFEORDER_ADMIN_PHONE")
+        pin = os.environ.get("SAFEORDER_ADMIN_PIN")
+        if phone and pin:
+            with Session(engine) as session:
+                ensure_admin_account(session, phone, pin, cfg)
+            logger.info("admin account ready")
+    except Exception:  # the server should still come up so the problem can be seen
+        logger.exception("persistent start failed")
+    finally:
+        app.state.starting = False
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    if env_flag("SAFEORDER_AUTOSEED"):
+    if env_flag("SAFEORDER_PERSIST"):
+        if env_flag("SAFEORDER_AUTOSEED_BACKGROUND"):
+            threading.Thread(
+                target=start_persistent, args=(app,), name="start-persistent", daemon=True
+            ).start()
+        else:
+            start_persistent(app)
+    elif env_flag("SAFEORDER_AUTOSEED"):
         if env_flag("SAFEORDER_AUTOSEED_BACKGROUND"):
             # Seeding can take minutes on a small free instance; the server must open its port
             # first or the host (Render) gives up with "no open ports detected".

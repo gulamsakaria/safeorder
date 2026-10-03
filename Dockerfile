@@ -11,7 +11,7 @@ COPY frontend/ ./
 # From WORKDIR /web that path resolves to /backend/app/i18n, so copy the folder there before the build.
 COPY backend/app/i18n /backend/app/i18n
 # Empty API address: the page calls the API on the same address it was loaded from.
-ENV VITE_USE_MOCK=false VITE_API_BASE_URL=
+ENV VITE_USE_MOCK=false VITE_API_BASE_URL= VITE_WALLET=true
 RUN npm run build
 
 # ---- service ----

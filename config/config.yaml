@@ -21,6 +21,8 @@ rules:
   seller_response_deadline_hours: 48
   dispatch_deadline_hours: 72    # seller never dispatches before this -> DISPUTABLE
   max_appeals_per_party: 1
+  seller_claim_deadline_hours: 24   # wallet payments: the seller must enter the order number in time, or the money goes back
+  buyer_silence_hours: 72          # wallet payments: a seller proof releases the money after this silence (if the checks pass)
   trust:
     trusted_min: 70              # TRUSTED 70-100
     caution_min: 40              # CAUTION 40-69, HIGH_RISK 0-39
@@ -66,6 +68,8 @@ dispute:
 api:
   base_path: /api
   cors_origins: ["http://localhost:5173"]
+  protect_admin: false             # true: the analyst console, /api/sim and /api/demo need an admin account (SAFEORDER_PROTECT_ADMIN=1)
+  persist: false                   # true: a persistent database with real accounts; /api/demo/reset is off (SAFEORDER_PERSIST=1)
   demo_endpoints_enabled: true     # /api/sim/* and /api/demo/*; switch off outside the sandbox demo
   delivery_code_digits: 6          # sandbox codes are derived from the seed; not a security feature
   max_amount_bdt: 200000
@@ -73,9 +77,21 @@ api:
   max_evidence_chars: 4000
   max_note_chars: 2000
   search_limit: 10
-  max_body_bytes: 65536            # larger request bodies are refused with 413
+  max_body_bytes: 65536            # larger request bodies are refused with 413 (the proof upload has its own limit)
   trust_proxy_headers: false       # true only behind a proxy that sets X-Forwarded-For (a Space, a load balancer)
   rate_limit_per_minute: 240       # per client address; 0 switches the limit off (429 when exceeded)
+
+# Sandbox wallet (accounts, demo money). Nothing here is real money.
+wallet:
+  pin_digits: 5
+  signup_bonus_bdt: 2000
+  add_money_max_bdt: 5000          # per request
+  add_money_total_cap_bdt: 20000   # per account, in total
+  max_pin_attempts: 5
+  lock_minutes: 15
+  session_days: 30
+  proof_image_max_chars: 400000    # base64 text; the website shrinks photos before sending
+  upload_max_body_bytes: 600000    # only for the proof upload route
 
 # Serving the built frontend from the API (SAFEORDER_SERVE_FRONTEND=1), for a one-address deployment.
 web:

@@ -1,5 +1,8 @@
 # Render Blueprint: one Docker web service that runs the API (and the app) from the Dockerfile.
 # Dashboard: New + -> Blueprint -> pick this repository. See RUNBOOK.md for the steps.
+#
+# This service keeps real accounts, so it needs a database that survives restarts: create a free
+# Postgres database (for example at neon.tech) and give its link as DATABASE_URL below.
 services:
   - type: web
     name: safeorder-api
@@ -9,13 +12,19 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
-      - key: SAFEORDER_AUTOSEED          # reload the seven demo scenarios on every start
+      - key: SAFEORDER_PERSIST            # keep the database between restarts; load demo data only when empty
         value: "1"
-      - key: SAFEORDER_AUTOSEED_BACKGROUND # seed in a background thread so the port opens at once
+      - key: SAFEORDER_PROTECT_ADMIN      # the analyst console and the demo clock need the admin account
         value: "1"
-      - key: SAFEORDER_TRUST_PROXY       # Render puts the visitor's address in X-Forwarded-For
+      - key: SAFEORDER_AUTOSEED_BACKGROUND # start-up work in a background thread so the port opens at once
         value: "1"
-      - key: SAFEORDER_CORS_ORIGINS      # the website that may call this API
+      - key: SAFEORDER_TRUST_PROXY        # Render puts the visitor's address in X-Forwarded-For
+        value: "1"
+      - key: SAFEORDER_CORS_ORIGINS       # the website that may call this API
         value: https://safeorder.stratifyxglobal.com
-      - key: SAFEORDER_DEMO_CODE         # protects /api/demo and /api/sim; you type it on the demo page
+      - key: DATABASE_URL                 # the Postgres link (postgresql://user:password@host/db?sslmode=require)
+        sync: false
+      - key: SAFEORDER_ADMIN_PHONE        # the admin account (11 digits, 01XXXXXXXXX)
+        sync: false
+      - key: SAFEORDER_ADMIN_PIN          # the admin PIN (5 digits); keep it private
         sync: false

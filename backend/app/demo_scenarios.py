@@ -205,6 +205,7 @@ def load_demo_scenarios(
     # caller has already been checked, and the setup must not depend on the public settings).
     inner_cfg = copy.deepcopy(config)
     inner_cfg["api"]["rate_limit_per_minute"] = 0
+    inner_cfg["api"]["protect_admin"] = False  # a private app: nobody outside can reach it
     inner = create_app(engine, model, classifier, inner_cfg, serve_frontend=False)
     inner.state.demo_code = None
     api = _Driver(TestClient(inner))

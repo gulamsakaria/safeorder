@@ -3,11 +3,13 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, HashRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
-import { IN_BROWSER, STATIC, USE_MOCK } from './api/client'
+import { IN_BROWSER, STATIC, USE_MOCK, WALLET } from './api/client'
 import { I18nProvider } from './i18n/I18nProvider'
+import { AuthProvider } from './wallet/AuthProvider'
 
 /** With VITE_USE_MOCK=true the in-browser mock server answers; otherwise the real API does. */
 async function prepare() {
+  if (WALLET) return // the wallet always talks to the backend named in config.js
   if (IN_BROWSER) {
     // No backend: load the exported models and data that sit next to the page.
     const { loadEngine } = await import('./engine/engine')
@@ -29,7 +31,9 @@ void prepare().then(() => {
     <StrictMode>
       <Router>
         <I18nProvider>
-          <App />
+          <AuthProvider>
+            <App />
+          </AuthProvider>
         </I18nProvider>
       </Router>
     </StrictMode>,

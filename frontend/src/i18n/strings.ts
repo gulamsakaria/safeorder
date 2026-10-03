@@ -1,3 +1,5 @@
+import { walletBn, walletEn } from '../wallet/strings'
+
 export type Lang = 'bn' | 'en'
 
 type Dict = Record<string, string>
@@ -787,4 +789,7 @@ Object.assign(en, {
     'The dispute model is not ready yet. You can decide yourself.',
 })
 
-export const STRINGS: Record<Lang, Dict> = { bn, en }
+export const STRINGS: Record<Lang, Dict> = {
+  bn: { ...bn, ...walletBn },
+  en: { ...en, ...walletEn },
+}

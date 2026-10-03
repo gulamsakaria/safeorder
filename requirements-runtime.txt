@@ -16,3 +16,4 @@ joblib==1.6.0
 networkx==3.6.1
 PyYAML==6.0.3
 httpx==0.28.1
+psycopg2-binary==2.9.10   # only used with DATABASE_URL (a Postgres database such as Neon)

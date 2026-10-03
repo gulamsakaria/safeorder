@@ -192,12 +192,13 @@ def test_render_blueprint_is_a_free_docker_service_for_the_api() -> None:
     assert service["type"] == "web" and service["runtime"] == "docker" and service["plan"] == "free"
     assert service["healthCheckPath"] == "/health"
     env = {e["key"]: e for e in service["envVars"]}
-    assert (
-        env["SAFEORDER_AUTOSEED"]["value"] == "1" and env["SAFEORDER_TRUST_PROXY"]["value"] == "1"
-    )
+    assert env["SAFEORDER_PERSIST"]["value"] == "1"  # real accounts: the data must be kept
+    assert env["SAFEORDER_PROTECT_ADMIN"]["value"] == "1"
+    assert env["SAFEORDER_TRUST_PROXY"]["value"] == "1"
     assert env["SAFEORDER_CORS_ORIGINS"]["value"] == "https://safeorder.stratifyxglobal.com"
-    assert env["SAFEORDER_DEMO_CODE"].get("sync") is False  # a secret: never written in the file
-    assert "value" not in env["SAFEORDER_DEMO_CODE"]
+    for secret in ("DATABASE_URL", "SAFEORDER_ADMIN_PHONE", "SAFEORDER_ADMIN_PIN"):
+        assert env[secret].get("sync") is False  # secrets: never written in the file
+        assert "value" not in env[secret]
 
 
 def test_the_shipped_site_has_no_backend_address_by_default() -> None:

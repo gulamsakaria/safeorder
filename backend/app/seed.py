@@ -113,7 +113,12 @@ def reset_and_load(
     reset_db(engine)
     if scenario_set == "empty":
         return {"sellers": 0, "buyers": 0}
+    return load_from_files(engine, config)
 
+
+def load_from_files(engine: Engine, cfg: dict[str, Any] | None = None) -> dict[str, int]:
+    """Load the generated synthetic sellers, buyers, daily stats and trust features (no reset)."""
+    config = cfg or load_config()
     directory = REPO_ROOT / config["paths"]["synthetic_dir"] / "v1"
     needed = ("sellers.csv", "buyers.csv", "seller_daily_stats.csv")
     if not all((directory / name).exists() for name in needed):

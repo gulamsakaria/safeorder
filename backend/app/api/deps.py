@@ -57,11 +57,36 @@ def get_classifier(request: Request) -> DisputeClassifier:
     return classifier if classifier is not None else load_classifier()
 
 
-def require_demo(request: Request, cfg: dict[str, Any] = Depends(get_config)) -> None:
+def require_admin_if_protected(
+    request: Request,
+    session: Session = Depends(get_session),
+    cfg: dict[str, Any] = Depends(get_config),
+) -> None:
+    """With accounts on (api.protect_admin), the analyst console needs an admin token."""
+    if not cfg["api"].get("protect_admin", False):
+        return
+    from app.auth import bearer_token, user_from_token
+    from app.enums import UserRole
+
+    user = user_from_token(session, bearer_token(request))
+    if user is None:
+        raise ApiError(401, "NOT_SIGNED_IN", "please sign in")
+    if user.role != UserRole.ADMIN or user.frozen:
+        raise ApiError(403, "ADMIN_ONLY", "admins only")
+
+
+def require_demo(
+    request: Request,
+    session: Session = Depends(get_session),
+    cfg: dict[str, Any] = Depends(get_config),
+) -> None:
     """Demo-only endpoints answer 404 when switched off in the config, and, when a demo code is
     set (SAFEORDER_DEMO_CODE), 403 unless the request carries it in the X-Demo-Code header."""
     if not cfg["api"]["demo_endpoints_enabled"]:
         raise ApiError(404, "NOT_FOUND", "not found")
+    if cfg["api"].get("protect_admin", False):
+        require_admin_if_protected(request, session, cfg)  # admins only, no shared demo code
+        return
     expected = getattr(request.app.state, "demo_code", None)
     if expected and not hmac.compare_digest(request.headers.get("x-demo-code", ""), expected):
         raise ApiError(403, "DEMO_CODE_REQUIRED", "the demo code is missing or wrong")

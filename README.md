@@ -16,7 +16,8 @@ Model cards, dataset cards, evaluation protocol: [docs/](docs/README.md).
    a prompt-injection screen and a router. It only *suggests*; a human analyst decides every dispute.
 4. **Metrics page** (`/metrics`) showing the evaluation numbers exactly as the scripts wrote them.
 
-The interface has a dark animated 3D look (see RUNBOOK.md, "Look and feel").
+The website is a sandbox wallet with accounts, held payments and an admin area (RUNBOOK.md,
+"Accounts, wallet and the live website"). The interface has a dark animated 3D look (see RUNBOOK.md, "Look and feel").
 
 ## Run
 

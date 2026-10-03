@@ -1,5 +1,6 @@
 """Database engine, create/reset and small helpers."""
 
+import os
 import re
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -23,11 +24,36 @@ _APPEND_ONLY_TRIGGERS = (
 )
 
 
+_POSTGRES_TRIGGERS = (
+    """CREATE OR REPLACE FUNCTION audit_log_guard() RETURNS trigger AS $$
+       BEGIN RAISE EXCEPTION 'audit_log is append-only'; END; $$ LANGUAGE plpgsql""",
+    "DROP TRIGGER IF EXISTS audit_log_no_change ON audit_log",
+    """CREATE TRIGGER audit_log_no_change BEFORE UPDATE OR DELETE ON audit_log
+       FOR EACH ROW EXECUTE FUNCTION audit_log_guard()""",
+)
+
+
+def database_url_from_env() -> str | None:
+    """DATABASE_URL (for example a Neon Postgres link) selects a persistent database."""
+    url = os.environ.get("DATABASE_URL", "").strip()
+    if not url:
+        return None
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg2://" + url[len(prefix) :]
+    return url
+
+
 def make_engine(url: str | None = None) -> Engine:
+    if url is None:
+        url = database_url_from_env()
     if url is None:
         db_path = REPO_ROOT / load_config()["paths"]["database"]
         db_path.parent.mkdir(parents=True, exist_ok=True)
         url = f"sqlite:///{db_path}"
+    if not url.startswith("sqlite"):
+        # a hosted database may close idle connections: check them before use
+        return create_engine(url, pool_pre_ping=True, pool_recycle=240, pool_size=5, max_overflow=5)
     engine = create_engine(url, connect_args={"check_same_thread": False})
 
     @event.listens_for(engine, "connect")
@@ -39,8 +65,9 @@ def make_engine(url: str | None = None) -> Engine:
 
 def create_db(engine: Engine) -> None:
     SQLModel.metadata.create_all(engine)
+    statements = _APPEND_ONLY_TRIGGERS if engine.dialect.name == "sqlite" else _POSTGRES_TRIGGERS
     with engine.begin() as conn:
-        for statement in _APPEND_ONLY_TRIGGERS:
+        for statement in statements:
             conn.execute(text(statement))
 
 

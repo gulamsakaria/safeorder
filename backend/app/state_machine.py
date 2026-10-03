@@ -15,12 +15,13 @@ from typing import Any
 
 from sqlmodel import Session, select
 
-from app import rules
+from app import rules, wallet
 from app.clock import clock
 from app.db import next_id, write_audit
 from app.enums import CourierStatus, LedgerAccount, OrderEvent, OrderStatus
 from app.ledger import post_transfer
 from app.models import Buyer, CourierEvent, Order, Seller
+from app.proof import proof_is_clean
 
 Account = LedgerAccount
 Status = OrderStatus
@@ -69,6 +70,29 @@ TRANSITIONS: dict[tuple[OrderStatus | None, OrderEvent], Transition] = {
     (Status.DISPUTED, Event.APPEAL): Transition(Status.ESCALATED, None),
     # Assumption (see DECISIONS.md): an escalated case is finally resolved by an analyst, otherwise
     # the held funds could never leave HOLD.
+    # Wallet payments (accounts and demo money): the buyer accepts, or the seller shows delivery
+    # proof, or the seller never claims the order. Money leaves HOLD only through these events.
+    **{
+        (status, Event.BUYER_ACCEPTED): Transition(
+            Status.RELEASED, (Account.HOLD, Account.SELLER_WALLET), "BUYER_ACCEPTED_RELEASE"
+        )
+        for status in (Status.HELD, Status.DELIVERED, Status.DISPUTABLE)
+    },
+    **{
+        (status, Event.PROOF_RELEASE): Transition(
+            Status.RELEASED, (Account.HOLD, Account.SELLER_WALLET), "PROOF_RELEASE"
+        )
+        for status in (Status.HELD, Status.DELIVERED, Status.DISPUTABLE)
+    },
+    **{
+        (status, Event.ADMIN_REFUND): Transition(
+            Status.REFUNDED, (Account.HOLD, Account.BUYER_WALLET), "ADMIN_REFUND_TO_BUYER"
+        )
+        for status in (Status.HELD, Status.DELIVERED, Status.DISPUTABLE)
+    },
+    (Status.HELD, Event.SELLER_NO_CLAIM): Transition(
+        Status.REFUNDED, (Account.HOLD, Account.BUYER_WALLET), "UNCLAIMED_REFUND"
+    ),
     (Status.ESCALATED, Event.ANALYST_REFUND): Transition(
         Status.REFUNDED, (Account.HOLD, Account.BUYER_WALLET), "REFUND_TO_BUYER"
     ),
@@ -104,6 +128,8 @@ def place_order(
     delivery_code: str | Callable[[str], str],
     now: datetime | None = None,
     actor: str = "buyer",
+    requires_claim: bool = False,
+    order_ref: str | None = None,
 ) -> Order:
     """Create a Safe Order and hold the money: BUYER_WALLET -> HOLD.
 
@@ -127,11 +153,14 @@ def place_order(
             order_id, delivery_code(order_id) if callable(delivery_code) else delivery_code
         ),
         placed_at=now,
+        requires_claim=requires_claim,
+        order_ref=order_ref,
     )
     session.add(order)
     session.flush()
     assert transition.ledger is not None
     post_transfer(session, order_id, *transition.ledger, amount_bdt, transition.reason, now)
+    wallet.on_ledger_move(session, order, *transition.ledger, amount_bdt, now)
     _audit(session, actor, f"ORDER_{Event.PLACE_ORDER}", order_id, {"to": transition.to}, now)
     return order
 
@@ -159,6 +188,7 @@ def apply_event(
         post_transfer(
             session, order.id, *transition.ledger, order.amount_bdt, transition.reason, now
         )
+        wallet.on_ledger_move(session, order, *transition.ledger, order.amount_bdt, now)
     order.status = transition.to
     if event == Event.DELIVERY_CONFIRMED:
         order.delivered_at = now
@@ -242,10 +272,41 @@ def process_timers(session: Session, now: datetime | None = None) -> list[tuple[
 
     held = session.exec(select(Order).where(Order.status == Status.HELD)).all()
     for order in held:
+        if order.requires_claim:
+            continue  # wallet payments follow their own timers, below
         overdue = rules.dispatch_deadline(order.placed_at) <= now
         if overdue and not _was_dispatched(session, order.id):
             apply_event(session, order.id, Event.DISPATCH_DEADLINE_MISSED, now=now)
             fired.append((order.id, Event.DISPATCH_DEADLINE_MISSED))
+    fired.extend(_process_wallet_timers(session, now))
+    return fired
+
+
+def _process_wallet_timers(session: Session, now: datetime) -> list[tuple[str, OrderEvent]]:
+    """Wallet payments: unclaimed orders go back to the buyer; a clean seller proof is released
+    after the buyer stayed silent. A proof with warnings waits for an admin."""
+    fired: list[tuple[str, OrderEvent]] = []
+    open_orders = session.exec(
+        select(Order).where(
+            Order.requires_claim == True,  # noqa: E712
+            Order.status.in_((Status.HELD, Status.DISPUTABLE)),  # type: ignore[attr-defined]
+        )
+    ).all()
+    for order in open_orders:
+        if (
+            order.status == Status.HELD
+            and order.claimed_at is None
+            and rules.claim_deadline(order.placed_at) <= now
+        ):
+            apply_event(session, order.id, Event.SELLER_NO_CLAIM, now=now)
+            fired.append((order.id, Event.SELLER_NO_CLAIM))
+        elif (
+            order.proof_submitted_at is not None
+            and proof_is_clean(order)
+            and rules.silence_deadline(order.proof_submitted_at) <= now
+        ):
+            apply_event(session, order.id, Event.PROOF_RELEASE, now=now, payload={"auto": True})
+            fired.append((order.id, Event.PROOF_RELEASE))
     return fired
 
 

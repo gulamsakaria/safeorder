@@ -51,9 +51,11 @@ class SecurityMiddleware:
         rate_limit_per_minute: int,
         trust_proxy: bool = False,
         clock: Callable[[], float] = time.monotonic,
+        upload_max_body_bytes: int | None = None,
     ) -> None:
         self.app = app
         self.max_body_bytes = max_body_bytes
+        self.upload_max_body_bytes = upload_max_body_bytes or max_body_bytes
         self.limit = rate_limit_per_minute
         self.trust_proxy = trust_proxy
         self.clock = clock
@@ -99,8 +101,12 @@ class SecurityMiddleware:
                 await self._respond(send, *_error(429, "RATE_LIMITED", "too many requests", retry))
                 return
 
+        # only the proof upload (a small photo) may be larger than a normal request
+        max_body = (
+            self.upload_max_body_bytes if scope["path"].endswith("/proof") else self.max_body_bytes
+        )
         declared = dict(scope["headers"]).get(b"content-length")
-        if declared is not None and declared.isdigit() and int(declared) > self.max_body_bytes:
+        if declared is not None and declared.isdigit() and int(declared) > max_body:
             await self._respond(
                 send, *_error(413, "PAYLOAD_TOO_LARGE", "request body is too large")
             )
@@ -115,7 +121,7 @@ class SecurityMiddleware:
             message = await receive()
             if message["type"] == "http.request":
                 received += len(message.get("body", b""))
-                if received > self.max_body_bytes:
+                if received > max_body:
                     too_large = True
                     raise BodyTooLarge
             return message
@@ -146,10 +152,11 @@ class SecurityMiddleware:
                 )
 
 
-def install(app: Any, api_cfg: dict[str, Any]) -> None:
+def install(app: Any, api_cfg: dict[str, Any], upload_max_body_bytes: int | None = None) -> None:
     app.add_middleware(
         SecurityMiddleware,
         max_body_bytes=api_cfg["max_body_bytes"],
         rate_limit_per_minute=api_cfg["rate_limit_per_minute"],
         trust_proxy=api_cfg.get("trust_proxy_headers", False),
+        upload_max_body_bytes=upload_max_body_bytes,
     )

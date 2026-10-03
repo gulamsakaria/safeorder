@@ -25,6 +25,8 @@ from app.enums import (
     Party,
     SnapshotTrigger,
     TrustBand,
+    UserRole,
+    WalletTxKind,
 )
 
 
@@ -76,6 +78,16 @@ class Order(SQLModel, table=True):
     delivered_at: datetime | None = None
     hold_until: datetime | None = None
     released_at: datetime | None = None
+    # Wallet payments (accounts and demo money). Orders from the classic demo leave these empty.
+    requires_claim: bool = False  # the seller must enter the order number
+    order_ref: str | None = None  # optional order number typed by the buyer
+    claimed_at: datetime | None = None
+    proof_tracking: str | None = None
+    proof_note: str | None = None
+    proof_image: str | None = None  # a small base64 image (data URL)
+    proof_image_hash: str | None = None
+    proof_submitted_at: datetime | None = None
+    proof_flags_json: str = "[]"
 
 
 class LedgerEntry(SQLModel, table=True):
@@ -205,3 +217,60 @@ class SellerFeatures(SQLModel, table=True):
     orders_total: int
     refund_count: int
     dispute_count: int
+
+
+class User(SQLModel, table=True):
+    """A sandbox wallet account. One person can be a buyer, and a seller once seller mode is on.
+
+    Balances are whole BDT of demo money. ``balance_bdt`` is the main wallet, ``held_bdt`` is money
+    other people paid for orders and that is still held. ``buyer_id`` and ``seller_id`` link the
+    account to the ``Buyer`` and ``Seller`` rows the order logic and the trust model work with.
+    """
+
+    __tablename__ = "app_user"
+
+    id: str = Field(primary_key=True)
+    phone: str = Field(unique=True, index=True)
+    name: str
+    pin_hash: str
+    role: UserRole = UserRole.USER
+    created_at: datetime
+    balance_bdt: int = 0
+    held_bdt: int = 0
+    added_total_bdt: int = 0  # demo money taken with Add Money (capped)
+    frozen: bool = False
+    failed_pins: int = 0
+    locked_until: datetime | None = None
+    buyer_id: str | None = Field(default=None, foreign_key="buyer.id", unique=True)
+    seller_id: str | None = Field(default=None, foreign_key="seller.id", unique=True)
+    shop_name: str | None = None
+    shop_category: str | None = None
+
+
+class AuthSession(SQLModel, table=True):
+    """Only the hash of the sign-in token is stored."""
+
+    __tablename__ = "auth_session"
+
+    token_hash: str = Field(primary_key=True)
+    user_id: str = Field(foreign_key="app_user.id", index=True)
+    created_at: datetime
+    expires_at: datetime
+
+
+class WalletTx(SQLModel, table=True):
+    """One line of an account's history."""
+
+    __tablename__ = "wallet_tx"
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: str = Field(foreign_key="app_user.id", index=True)
+    kind: WalletTxKind
+    amount_bdt: int  # positive: money in; negative: money out (of the main wallet or held money)
+    balance_after: int
+    held_after: int
+    counterparty_name: str | None = None
+    counterparty_phone: str | None = None
+    order_id: str | None = None
+    note: str | None = None
+    created_at: datetime

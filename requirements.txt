@@ -14,3 +14,4 @@ ruff
 httpx
 matplotlib
 huggingface_hub
+psycopg2-binary
