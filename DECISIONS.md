@@ -550,3 +550,22 @@ Every deviation from BLUEPRINT.md and every fallback is recorded here.
   fraud-detection logic private until after the event still applies to the link itself.
 - The Python backend, its database, ledger and API stay the reference implementation (the rehearsal and
   the backend tests run on it). The Hugging Face Space remains an alternative way to host the same app.
+
+
+## One site, two modes: in the browser or against a backend (Render)
+
+- The team asked for the site on `safeorder.stratifyxglobal.com` calling a backend on Render. The same
+  build now does both: `config.js` (a plain file next to `index.html`) holds `window.SAFEORDER_API`;
+  empty means the models run in the browser, an address means the site calls that backend. Changing it
+  needs no rebuild (edit the file in cPanel).
+- `render.yaml` is a Render Blueprint: a free Docker web service from the existing `Dockerfile`
+  (which now listens on `$PORT`), health check `/health`, the allowed website in
+  `SAFEORDER_CORS_ORIGINS`, and `SAFEORDER_DEMO_CODE` as a secret asked for in the dashboard (not stored
+  in the file). The backend peaks near 280 MB, inside Render's 512 MB free limit.
+- A free Render service sleeps and wakes in up to a minute, so the website polls `/health` and shows a
+  "server is waking up" notice. This is the main risk of this mode for a live demonstration; the
+  in-browser mode has no such risk.
+- Verified here: a site served from one origin and the real backend on another origin (CORS), the demo
+  code refused without it and accepted with it, scenarios loaded and a case analysed by the backend,
+  and no in-browser engine file fetched in that mode. **Not verified:** the Render build itself
+  (no Docker here) and the real domain (the sandbox cannot reach stratifyxglobal.com or Render).

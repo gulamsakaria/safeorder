@@ -1,9 +1,11 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useBackendStatus } from '../api/backendStatus'
 import { useI18n } from '../i18n/useI18n'
 
 /** The sandbox banner is part of the layout, so no screen can ever hide it. */
 export function Layout() {
   const { t, toggle } = useI18n()
+  const backend = useBackendStatus()
   // the analyst console needs room for side-by-side columns; the buyer screens stay phone-sized
   const path = useLocation().pathname
   const wide = path.startsWith('/analyst') || path.startsWith('/metrics')
@@ -47,6 +49,11 @@ export function Layout() {
         </NavLink>
       </nav>
       <main className={`mx-auto ${width} space-y-4 px-4 pb-16`}>
+        {backend !== 'ready' && (
+          <p role="status" data-testid="backend-status" className="rounded-xl border border-sky-300 bg-sky-50 p-3 text-sm">
+            {t(backend === 'waking' ? 'backend.waking' : 'backend.down')}
+          </p>
+        )}
         <Outlet />
       </main>
     </div>

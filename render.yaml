@@ -1,0 +1,19 @@
+# Render Blueprint: one Docker web service that runs the API (and the app) from the Dockerfile.
+# Dashboard: New + -> Blueprint -> pick this repository. See RUNBOOK.md for the steps.
+services:
+  - type: web
+    name: safeorder-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: SAFEORDER_AUTOSEED          # reload the seven demo scenarios on every start
+        value: "1"
+      - key: SAFEORDER_TRUST_PROXY       # Render puts the visitor's address in X-Forwarded-For
+        value: "1"
+      - key: SAFEORDER_CORS_ORIGINS      # the website that may call this API
+        value: https://safeorder.stratifyxglobal.com
+      - key: SAFEORDER_DEMO_CODE         # protects /api/demo and /api/sim; you type it on the demo page
+        sync: false

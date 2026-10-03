@@ -37,4 +37,5 @@ RUN mkdir -p data docs \
 
 ENV SAFEORDER_SERVE_FRONTEND=1 SAFEORDER_AUTOSEED=1 SAFEORDER_TRUST_PROXY=1
 EXPOSE 7860
-CMD ["python", "-m", "uvicorn", "app.main:app", "--app-dir", "backend", "--host", "0.0.0.0", "--port", "7860"]
+# Render sets PORT; a Hugging Face Space uses 7860.
+CMD ["sh", "-c", "exec python -m uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port ${PORT:-7860}"]

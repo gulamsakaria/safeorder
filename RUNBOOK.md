@@ -77,6 +77,39 @@ TypeScript and checked against the Python code (see DECISIONS.md). State (orders
 clock) lives in the browser tab; there is no database and no sign-in. Everything it needs, including the model
 weights, is downloadable by anyone who has the link: share the link with the judges and the team only.
 
+## Website on a sub-domain that calls a backend on Render
+
+The same `site.zip` can talk to a real backend instead of running the models in the browser. Use this
+if you want the live site to show the real API (database, ledger, audit log).
+
+**A. Backend on Render (free plan)**
+
+1. render.com -> sign up -> **New +** -> **Blueprint** -> connect the GitHub repository
+   `gulamsakaria/safeorder` (if it is private, give Render access to it). Render reads `render.yaml`.
+2. It asks for one secret: `SAFEORDER_DEMO_CODE`. Type a code you choose (it protects the demo
+   controls). The other settings are in the file: Docker build, `/health` check, the allowed website
+   `https://safeorder.stratifyxglobal.com`, demo scenarios loaded on every start.
+3. Press **Apply**. The first build takes about 5 to 10 minutes (Render logs show progress). When the
+   service is **Live**, copy its address, for example `https://safeorder-api.onrender.com`, and open
+   `<address>/health`: it must show `{"status":"ok"}`.
+4. Free plan facts: the service sleeps after about 15 minutes without a visitor and needs up to a minute
+   to wake (the website shows a "server is waking up" notice meanwhile); memory is 512 MB and the app peaks
+   near 300 MB; the data resets on every start and the scenarios are loaded again. **Open the website a
+   few minutes before a demonstration.** For a demo day without risk, Render's paid plan stays awake.
+
+**B. The website on `safeorder.stratifyxglobal.com`**
+
+1. cPanel -> Subdomains: create `safeorder` (document root, for example `public_html/safeorder`).
+2. File Manager -> that folder -> upload `site.zip` -> Extract (`index.html` directly in the folder).
+3. Open `config.js` in that folder (File Manager -> Edit) and set the one line to your Render address,
+   without a slash at the end:
+   `window.SAFEORDER_API = 'https://safeorder-api.onrender.com'`
+   Save and reload the site (Ctrl+F5). Leave it as `''` to run without a backend.
+4. On the demo page type the demo code from step A2, then **Load scenarios**.
+
+Check: browser F12 -> Network shows requests to the Render address; a red CORS error means the
+`SAFEORDER_CORS_ORIGINS` value on Render does not equal the website's address exactly (https, no slash).
+
 ## Live demo on Hugging Face (free Space)
 
 One container serves the API and the frontend on one address. Do this on your own computer, where

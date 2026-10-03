@@ -167,7 +167,7 @@ def test_space_files_agree_on_the_port_and_the_sdk() -> None:
     card = (root / "deploy" / "space" / "README.md").read_text()
     dockerfile = (root / "Dockerfile").read_text()
     assert "sdk: docker" in card and "app_port: 7860" in card
-    assert '--port", "7860"' in dockerfile and "EXPOSE 7860" in dockerfile
+    assert "${PORT:-7860}" in dockerfile and "EXPOSE 7860" in dockerfile  # Render sets PORT
     assert "SAFEORDER_AUTOSEED=1" in dockerfile and "SAFEORDER_SERVE_FRONTEND=1" in dockerfile
 
 
@@ -182,3 +182,24 @@ def test_runtime_requirements_match_what_the_model_was_trained_with() -> None:
     }
     for library, version in meta["libraries"].items():
         assert pins[library] == version, library
+
+
+def test_render_blueprint_is_a_free_docker_service_for_the_api() -> None:
+    import yaml
+
+    spec = yaml.safe_load((deploy.REPO_ROOT / "render.yaml").read_text(encoding="utf-8"))
+    (service,) = spec["services"]
+    assert service["type"] == "web" and service["runtime"] == "docker" and service["plan"] == "free"
+    assert service["healthCheckPath"] == "/health"
+    env = {e["key"]: e for e in service["envVars"]}
+    assert (
+        env["SAFEORDER_AUTOSEED"]["value"] == "1" and env["SAFEORDER_TRUST_PROXY"]["value"] == "1"
+    )
+    assert env["SAFEORDER_CORS_ORIGINS"]["value"] == "https://safeorder.stratifyxglobal.com"
+    assert env["SAFEORDER_DEMO_CODE"].get("sync") is False  # a secret: never written in the file
+    assert "value" not in env["SAFEORDER_DEMO_CODE"]
+
+
+def test_the_shipped_site_has_no_backend_address_by_default() -> None:
+    config = (deploy.REPO_ROOT / "site" / "config.js").read_text(encoding="utf-8")
+    assert "window.SAFEORDER_API = ''" in config

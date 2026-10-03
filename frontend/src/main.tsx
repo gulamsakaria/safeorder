@@ -3,12 +3,12 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, HashRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
-import { STATIC, USE_MOCK } from './api/client'
+import { IN_BROWSER, STATIC, USE_MOCK } from './api/client'
 import { I18nProvider } from './i18n/I18nProvider'
 
 /** With VITE_USE_MOCK=true the in-browser mock server answers; otherwise the real API does. */
 async function prepare() {
-  if (STATIC) {
+  if (IN_BROWSER) {
     // No backend: load the exported models and data that sit next to the page.
     const { loadEngine } = await import('./engine/engine')
     await loadEngine('./engine/')
