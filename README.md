@@ -411,3 +411,122 @@ container (API and UI). `--dry-run` stages and scans the files without uploading
 ### Ports at a glance
 
 `8000` API in development, `5173` Vite dev server, `7860` container (or `$PORT`).
+
+---
+
+## 8. Live deployment
+
+**Live demo: <https://safeorder.stratifyxglobal.com/>**
+
+```
+ visitor's browser
+   │  static website (HTML, CSS, JavaScript), on a cPanel host:  https://safeorder.stratifyxglobal.com/
+   ▼
+ API (Docker web service on Render, free plan):                   https://safeorder-api.onrender.com
+   ▼
+ PostgreSQL (Neon, free plan): accounts, orders, ledger, audit log   (kept between restarts)
+```
+
+- `GET https://safeorder-api.onrender.com/health` answers `{"status":"ok"}`.
+- `GET https://safeorder-api.onrender.com/health/db` tells which kind of database the API uses
+  (the link itself is never shown); `"keeps_data": true` means accounts survive restarts.
+- The website finds the API through one line in `config.js` on the host:
+  `window.SAFEORDER_API = 'https://safeorder-api.onrender.com'`. The file is loaded with a changing query
+  string, so a host or CDN that caches script files cannot serve an old copy.
+- The admin phone number and PIN are secrets and are **not published here** (see the judge quick start).
+
+### The two modes of the website
+
+| Mode | How it is built | What it needs |
+|---|---|---|
+| **Backend mode (wallet)**: the live site | `make static-site` (wallet build) and an API address in `config.js` | The API. Accounts, held payments, admin. |
+| **In-browser mode (classic)** | The same build without `VITE_WALLET` (section 7), `config.js` left as `''` | No server: the trained models run in the browser and the state lives in the browser tab |
+
+An earlier classic in-browser build, made before the wallet existed, is kept at
+<https://safeorder.stratifyxglobal.com/old/>. `site.zip` holds only the website files for a web host; the
+wallet build cannot run from it alone because it needs the API.
+
+### Render free-tier wake-up delay
+
+A free Render service sleeps after about 15 minutes without a request and needs up to a minute to wake
+up (the classic screens show a "server is waking up" notice; in the wallet app a request sent during the
+wake-up can fail or take about a minute, so wait a minute and retry). A free uptime monitor that calls
+`/health` every 5 minutes keeps the live service awake (set up by the owner); **open the site a few
+minutes before a demonstration**. Neon also suspends an idle database; waking it added about one second
+in a test (0.4 s warm, 1.2 s after 6 idle minutes).
+
+### Deploying your own copy
+
+Render: **New + -> Blueprint** -> this repository (`render.yaml`). It asks for three secrets:
+`DATABASE_URL` (a Postgres link, for example from Neon), `SAFEORDER_ADMIN_PHONE` and
+`SAFEORDER_ADMIN_PIN`. The website is then uploaded to a sub-domain and `config.js` points to the
+service. Step-by-step instructions, including cPanel, are in [RUNBOOK.md](RUNBOOK.md).
+
+---
+
+## 9. Testing and the 5-minute judge quick start
+
+### Commands and what a pass looks like
+
+Results below are from a **fresh clone on Windows 11** (Python 3.12.10, Node 24.21.0) with
+`PYTHONUTF8=1`. Linux, macOS and Docker were not available to the author for this README.
+
+| Command | A passing result | Verified result |
+|---|---|---|
+| `make test` | pytest ends with `N passed`, ruff with `All checks passed!` | **513 passed** in about 100 s; ruff: All checks passed |
+| `make test-web` | typecheck prints nothing, Vitest `Test Files N passed`, lint has no errors, build `built in ...` | typecheck clean; **13 test files, 488 tests passed** (about 30 s); oxlint: 0 errors, 4 warnings; build ok |
+| `make eval` | prints each section as `measured`; writes `reports/summary.json` and figures | trust, fairness, dispute classifier, routing: `measured`; injection: `measured_on_developer_phrases`; time study: `not_measured`; about 10 s |
+| `make secret-scan` | `scanned N files, 0 possible secret(s)` and exit code 0 | 0 possible secrets |
+| `make rehearse` | `run 1..3: scenarios 1-7 passed`, then `3 clean runs, identical results` | see the note below |
+| `make openapi` | rewrites `docs/openapi.json`; a test fails when the file is stale | in sync |
+| `python run_local.py` | `READY: open http://localhost:PORT`, then the site loads and the admin can sign in | ready in about 90 s on a first run (warm pip cache); the home page loaded from the API's own address, the login form appeared, the demo admin signed in, the analyst queue held the 3 demo disputes |
+
+- **Retraining is reproducible.** Running `make train cases train-dispute eval` in the fresh clone gave
+  every number in `reports/summary.json` back to within 3.3e-16 (only the timing numbers differ between
+  machines).
+- **`make rehearse` on Windows** runs the seven scenarios and then stops with a `PermissionError` while
+  deleting a temporary SQLite file, so it exits with an error even though the scenarios ran. The same
+  work with the clean-up switched off gave three runs, each reporting scenarios 1 to 7 passed and
+  identical results. Use Linux, macOS or the container for the clean `3 clean runs, identical results`
+  line (not run by the author).
+- **Static site check.** `backend/tests/test_static_export.py` compares `site/` with `site.zip`. The
+  repository's `.gitattributes` keeps LF line endings so the check also passes after a clone on Windows.
+
+### Judge quick start (about 5 minutes)
+
+Use the live site (<https://safeorder.stratifyxglobal.com/>; the first request after a quiet period can
+take up to a minute, section 8) **or** your own copy with `python run_local.py`
+(<http://localhost:8000>), where the demo admin is phone `01900000000`, PIN `12345`.
+
+1. **Read.** Open <https://safeorder.stratifyxglobal.com/>. The home page explains the problem, the five
+   steps, what is new, the technology, the safety measures, a FAQ and the limits. Use the menu at the top.
+2. **Make two demo accounts.** Home page -> **Demo guide** button -> **Create demo accounts**. One click creates a
+   buyer and a seller (PIN `12345`, the numbers are shown) and signs you in as the buyer. A real
+   sign-up works too (**Get started**): any made-up phone number `01XXXXXXXXX` and 5-digit PIN.
+3. **Trust Check.** Home -> **Check Seller**, search `Synthetic Shop 0001`: **HIGH_RISK** (score 3) with
+   reasons. `Synthetic Shop 0002`: **TRUSTED** (95). `Synthetic Shop 0037`: **LIMITED_HISTORY** (a new honest
+   seller, no score shown).
+4. **Place an order.** Home -> **Make Payment**: type the demo seller's number, press **Check** (you see
+   the trust check), enter an amount, an optional order number and the PIN. The money is **held**; the
+   receipt shows the order number (for example `O-0012`).
+5. **Seller takes the order.** More -> *Switch to Demo Seller* (or use a second browser tab) -> **Seller** ->
+   type the order number -> **Take the order**. The seller could not see the number before this.
+6. **Happy path.** Switch back to the buyer, open the order (History -> Orders) -> **I received it**. The
+   held money moves to the seller (compare *Account* on both sides).
+7. **Dispute path.** Make a second payment, take the order as the seller, then as the buyer press
+   **Report a problem** and write a sentence such as "The parcel never arrived and nobody answers my
+   calls." The **AI analysis runs at once**; the seller can answer on the same order page. The money
+   stays held.
+8. **Analyst decision (admin).** Sign in as the admin, then More -> **Admin panel** -> *Dispute console*.
+   On a local copy the admin is `01900000000` / `12345`. **The hosted site's admin login is private to the
+   owner and is not published here (TODO for the owner: give the judges that phone and PIN privately).**
+   Open the case: timeline, flags, class probabilities,
+   route, template explanation in Bangla and English. Choose a decision, write the required note,
+   confirm. The case page then shows the seller's **score before and after**.
+9. **Time rules.** Admin panel -> **Time** -> `+24` or `+72` hours: an order nobody took is refunded, and
+   a clean seller proof is released after 72 hours of buyer silence.
+10. **Metrics.** Home page -> **Evaluation results** button (`/#/metrics`): the numbers exactly as the scripts wrote them.
+
+The seven classic demo scenarios (section 2) are loaded by `python run_local.py` (it sets
+`SAFEORDER_FULL_DEMO=1`, so the analyst console already holds their disputes) or by `make demo-reset`; the
+classic controls are at `/demo`.
