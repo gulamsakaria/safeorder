@@ -1,4 +1,4 @@
-import { Link, Navigate, Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes } from 'react-router-dom'
 import { WALLET } from './api/client'
 import { Layout } from './components/Layout'
 import { Card } from './components/ui'
@@ -15,6 +15,7 @@ import { TrustCheckPage } from './pages/TrustCheckPage'
 import { AccountPage } from './wallet/pages/AccountPage'
 import { AdminPage } from './wallet/pages/AdminPage'
 import { GuidePage } from './wallet/pages/GuidePage'
+import { LandingPage } from './wallet/pages/LandingPage'
 import { HistoryPage } from './wallet/pages/HistoryPage'
 import { HomePage } from './wallet/pages/HomePage'
 import { MorePage } from './wallet/pages/MorePage'
@@ -39,9 +40,9 @@ function NotFound() {
 export default function App() {
   return (
     <Routes>
+      {WALLET && <Route index element={<LandingPage />} />}
       {WALLET && (
         <Route element={<WalletShell />}>
-          <Route index element={<Navigate to="/home" replace />} />
           <Route path="welcome" element={<WelcomePage />} />
           <Route path="home" element={<HomePage />} />
           <Route path="pay" element={<PayPage />} />
