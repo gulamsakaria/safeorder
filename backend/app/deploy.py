@@ -123,7 +123,9 @@ def start_persistent(app: FastAPI) -> None:
     try:
         engine = app.state.engine
         if engine is None:
-            engine = app.state.engine = make_engine()
+            engine = make_engine()
+            create_db(engine)  # before requests may use it
+            app.state.engine = engine
         create_db(engine)
         if engine.dialect.name == "sqlite" and os.environ.get("RENDER"):
             logger.warning(

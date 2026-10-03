@@ -65,7 +65,9 @@ def _order_row(session: Session, order: Order) -> dict[str, Any]:
 @router.get("/overview", response_model=AdminOverviewOut)
 def overview(session: Session = Depends(get_session)) -> dict[str, Any]:
     wallet_orders = session.exec(select(Order).where(Order.requires_claim == True)).all()  # noqa: E712
-    open_orders = [o for o in wallet_orders if o.status in OPEN]
+    # money is still held while a dispute is open or escalated
+    holding = (*OPEN, OrderStatus.DISPUTED, OrderStatus.ESCALATED)
+    open_orders = [o for o in wallet_orders if o.status in holding]
     return {
         "users": session.exec(select(func.count()).select_from(User)).one(),
         "sellers": session.exec(
