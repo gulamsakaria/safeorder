@@ -15,6 +15,7 @@ Environment variables (all optional):
 import copy
 import logging
 import os
+import threading
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -92,5 +93,10 @@ def seed_demo(app: FastAPI) -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if env_flag("SAFEORDER_AUTOSEED"):
-        seed_demo(app)
+        if env_flag("SAFEORDER_AUTOSEED_BACKGROUND"):
+            # Seeding can take minutes on a small free instance; the server must open its port
+            # first or the host (Render) gives up with "no open ports detected".
+            threading.Thread(target=seed_demo, args=(app,), name="seed-demo", daemon=True).start()
+        else:
+            seed_demo(app)
     yield
